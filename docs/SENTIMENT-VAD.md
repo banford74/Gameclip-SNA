@@ -78,3 +78,36 @@ dominance d        → 支配感（掌控 vs 无力，独立维度）
 **对 Task B 的用法**：
 - 监督信号用连续 VAD（v/a 均值 + 证据离散度）→ 任务目标从"分类分布"变成"valence 回归 + 分布校准"，与评论实测分布（pos/neg/neu 占比）通过阈值映射兼容；
 - 评估时同时报：连续相关（Spearman）、分类一致率（由 VAD 派生 label 对比人工 label）、混合样本单独统计。
+
+
+## 七、词典 × LLM 混合（hybrid）与持续扩充（2026-11-22 第三版）
+
+**核心原则：词典只做先验，LLM 判断要综合进来，并用分歧反哺词典。**
+
+链路（`src/sentiment/hybrid.py` + `learn_vad.py`）：
+
+```
+词典打分 → learned VAD 覆盖层（梗词，权重 0.6）→ 派生三分类（v 阈值，无 mixed）
+                ↑
+        LLM 双 rater VAD 锚点（Top300，1–9 分）
+                ↓
+        蒸馏词级 VAD（zh_learned_vad.json，208 词）
+        未登录词队列（zh_queue.json，300 候选）→ 人工复核 → zh_seed.json（持续扩充）
+```
+
+**5 折交叉验证**（锚点 300 条，训练折学覆盖层、测试折评估）：
+
+| 口径 | valence Spearman |
+|---|---|
+| 纯词典 | 0.401 |
+| + learned VAD 覆盖层 | **0.528**（+0.13） |
+
+**一个踩过的坑**：线性校准（y=a·x+b）能把均值对齐到 LLM 尺度，但会把分布压回中心——派生标签几乎全变中性（90%）。所以**校准只用于报告均值，不参与标签阈值**；标签按覆盖层后的分数直接派生。
+
+**持续学习闭环**：
+1. 每条视频抽样 Top300 高赞 → `scripts/label_vad.js`（双 rater VAD）
+2. `python -m pipeline.sentiment.learn_vad <vad.json>` → 覆盖层（CV 验证）
+3. `python -m pipeline.sentiment.hybrid mine <vad.json>` → 未登录词队列
+4. 人工复核队列 → 并入 `zh_seed.json` → 回到 1
+
+**运行口径**：`config.yaml` 的 `sentiment.mode` 默认 `hybrid`（词典 × 覆盖层），`lexicon` 为纯词典回退。

@@ -1,0 +1,2105 @@
+{
+ "n_anchors": 300,
+ "candidates": [
+  {
+   "term": "收藏",
+   "n": 8,
+   "llm_v_mean": 4.62,
+   "lex_v_mean": 5.91,
+   "suggested_v": 4.62
+  },
+  {
+   "term": "背景",
+   "n": 8,
+   "llm_v_mean": 4.81,
+   "lex_v_mean": 3.95,
+   "suggested_v": 4.81
+  },
+  {
+   "term": "景图",
+   "n": 8,
+   "llm_v_mean": 4.81,
+   "lex_v_mean": 3.95,
+   "suggested_v": 4.81
+  },
+  {
+   "term": "背景图",
+   "n": 8,
+   "llm_v_mean": 4.81,
+   "lex_v_mean": 3.95,
+   "suggested_v": 4.81
+  },
+  {
+   "term": "后悔",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "悔一",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "一辈",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "辈子",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "后悔一",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "悔一辈",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "一辈子",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "后悔一辈",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "悔一辈子",
+   "n": 6,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.63,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "藏好",
+   "n": 5,
+   "llm_v_mean": 4.0,
+   "lex_v_mean": 6.89,
+   "suggested_v": 4.0
+  },
+  {
+   "term": "收藏好",
+   "n": 5,
+   "llm_v_mean": 4.0,
+   "lex_v_mean": 6.89,
+   "suggested_v": 4.0
+  },
+  {
+   "term": "不看",
+   "n": 5,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "发怒",
+   "n": 5,
+   "llm_v_mean": 3.1,
+   "lex_v_mean": 5.87,
+   "suggested_v": 3.1
+  },
+  {
+   "term": "好白",
+   "n": 4,
+   "llm_v_mean": 4.0,
+   "lex_v_mean": 7.09,
+   "suggested_v": 4.0
+  },
+  {
+   "term": "藏好白",
+   "n": 4,
+   "llm_v_mean": 4.0,
+   "lex_v_mean": 7.09,
+   "suggested_v": 4.0
+  },
+  {
+   "term": "收藏好白",
+   "n": 4,
+   "llm_v_mean": 4.0,
+   "lex_v_mean": 7.09,
+   "suggested_v": 4.0
+  },
+  {
+   "term": "看背",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "图后",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "不看背",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "看背景",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "景图后",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "图后悔",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "不看背景",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "看背景图",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "背景图后",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "景图后悔",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "图后悔一",
+   "n": 4,
+   "llm_v_mean": 6.12,
+   "lex_v_mean": 2.6,
+   "suggested_v": 6.12
+  },
+  {
+   "term": "评论",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 7.02,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "论的",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 7.02,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "评论的",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 7.02,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "绝望",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "望的",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "的凝",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "凝视",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "绝望的",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "望的凝",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "的凝视",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "绝望的凝",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "望的凝视",
+   "n": 3,
+   "llm_v_mean": 3.67,
+   "lex_v_mean": 5.2,
+   "suggested_v": 3.67
+  },
+  {
+   "term": "的收",
+   "n": 3,
+   "llm_v_mean": 5.17,
+   "lex_v_mean": 6.4,
+   "suggested_v": 5.17
+  },
+  {
+   "term": "的收藏",
+   "n": 3,
+   "llm_v_mean": 5.17,
+   "lex_v_mean": 6.4,
+   "suggested_v": 5.17
+  },
+  {
+   "term": "谁说",
+   "n": 3,
+   "llm_v_mean": 3.33,
+   "lex_v_mean": 7.33,
+   "suggested_v": 3.33
+  },
+  {
+   "term": "说的",
+   "n": 3,
+   "llm_v_mean": 3.33,
+   "lex_v_mean": 7.33,
+   "suggested_v": 3.33
+  },
+  {
+   "term": "谁说的",
+   "n": 3,
+   "llm_v_mean": 3.33,
+   "lex_v_mean": 7.33,
+   "suggested_v": 3.33
+  },
+  {
+   "term": "逼我",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "我评",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "蒋介",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "介石",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "石结",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "结婚",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "逼我评",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "我评论",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "蒋介石",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "介石结",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "石结婚",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "逼我评论",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "我评论的",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "蒋介石结",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "介石结婚",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.64,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "看收",
+   "n": 2,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 3.9,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "看收藏",
+   "n": 2,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 3.9,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "吓死",
+   "n": 2,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.54,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "微笑",
+   "n": 2,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.93,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "说的收",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.09,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "谁说的收",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.09,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "说的收藏",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.09,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "的收藏好",
+   "n": 2,
+   "llm_v_mean": 3.75,
+   "lex_v_mean": 7.09,
+   "suggested_v": 3.75
+  },
+  {
+   "term": "笑哭",
+   "n": 2,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 6.76,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "我了",
+   "n": 2,
+   "llm_v_mean": 4.25,
+   "lex_v_mean": 6.42,
+   "suggested_v": 4.25
+  },
+  {
+   "term": "四级",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "级蛋",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "蛋打",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "打绝",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "绝密",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "四级蛋",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "级蛋打",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "蛋打绝",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "打绝密",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "四级蛋打",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "级蛋打绝",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "蛋打绝密",
+   "n": 1,
+   "llm_v_mean": 4.5,
+   "lex_v_mean": 7.4,
+   "suggested_v": 4.5
+  },
+  {
+   "term": "的去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "去跟",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "跟蒋",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "婚去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "论的去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "的去跟",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "去跟蒋",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "跟蒋介",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "结婚去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "评论的去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "论的去跟",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "的去跟蒋",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "去跟蒋介",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "跟蒋介石",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "石结婚去",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 7.11,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "开头",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "头竟",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "竟让",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "让我",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "我想",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "想起",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "起了",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "了怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "怕不",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "不鸡",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "开头竟",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "头竟让",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "竟让我",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "让我想",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "我想起",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "想起了",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "起了怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "了怕不",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "怕不鸡",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "开头竟让",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "头竟让我",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "竟让我想",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "让我想起",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "我想起了",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "想起了怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "起了怕不",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "了怕不鸡",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 2.6,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "千万",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "万别",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "别看",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "藏不",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "不能",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "能会",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "会后",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "千万别",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "万别看",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "别看收",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "收藏不",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "藏不能",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "不能会",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "能会后",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "会后悔",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "千万别看",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "万别看收",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "别看收藏",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "看收藏不",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "收藏不能",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "藏不能会",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "不能会后",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "能会后悔",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "会后悔一",
+   "n": 1,
+   "llm_v_mean": 6.0,
+   "lex_v_mean": 2.8,
+   "suggested_v": 6.0
+  },
+  {
+   "term": "我去",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "终于",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "于找",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "找到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这样",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "样的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "藏了",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "一直",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "直对",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "对这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这方",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "方面",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "面感",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "感兴",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "兴趣",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "但是",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "是搜",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "搜不",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "不到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到比",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "比较",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "较齐",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "齐的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "终于找",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "于找到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "找到这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到这样",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这样的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "样的收",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "收藏了",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "一直对",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "直对这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "对这方",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这方面",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "方面感",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "面感兴",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "感兴趣",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "但是搜",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "是搜不",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "搜不到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "不到比",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到比较",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "比较齐",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "较齐的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "终于找到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "于找到这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "找到这样",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到这样的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这样的收",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "样的收藏",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "的收藏了",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "一直对这",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "直对这方",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "对这方面",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "这方面感",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "方面感兴",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "面感兴趣",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "但是搜不",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "是搜不到",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "搜不到比",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "不到比较",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "到比较齐",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "比较齐的",
+   "n": 1,
+   "llm_v_mean": 8.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 8.0
+  },
+  {
+   "term": "依旧",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "旧不",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "不玩",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "玩怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "怕步",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "步机",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "风是",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "是必",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "必须",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "须跟",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "跟的",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "依旧不",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "旧不玩",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "不玩怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "玩怕步",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "怕步机",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "风是必",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "是必须",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "必须跟",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "须跟的",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "依旧不玩",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "旧不玩怕",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "不玩怕步",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "玩怕步机",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "风是必须",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "是必须跟",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "必须跟的",
+   "n": 1,
+   "llm_v_mean": 5.0,
+   "lex_v_mean": 7.4,
+   "suggested_v": 5.0
+  },
+  {
+   "term": "不要",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "要看",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "死人",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "不要看",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "要看收",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "吓死人",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "不要看收",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "要看收藏",
+   "n": 1,
+   "llm_v_mean": 3.0,
+   "lex_v_mean": 5.0,
+   "suggested_v": 3.0
+  },
+  {
+   "term": "这个",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "个背",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "图完",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "完全",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "全顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "顺顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "这个背",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "个背景",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "景图完",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "图完全",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "完全顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "全顺顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "这个背景",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "个背景图",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "背景图完",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "景图完全",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "图完全顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "完全顺顺",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 5.0,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "自愿",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "愿评",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "的来",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "看完",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "完背",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "图之",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "之后",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "自愿评",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "愿评论",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "论的来",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "看完背",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "完背景",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "景图之",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "图之后",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "自愿评论",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "愿评论的",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "评论的来",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "看完背景",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "完背景图",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "背景图之",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "景图之后",
+   "n": 1,
+   "llm_v_mean": 3.5,
+   "lex_v_mean": 5.79,
+   "suggested_v": 3.5
+  },
+  {
+   "term": "是谁",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "的这",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "这种",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "种背",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "图绝",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "绝了",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "是谁说",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "说的这",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "的这种",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "这种背",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  },
+  {
+   "term": "种背景",
+   "n": 1,
+   "llm_v_mean": 2.5,
+   "lex_v_mean": 7.8,
+   "suggested_v": 2.5
+  }
+ ]
+}

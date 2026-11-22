@@ -27,7 +27,8 @@ from .ua_src.vision.frame_analyzer import analyze_frames, summarize_across_frame
 from .ua_src.comments.sentiment_analyzer import lexicon_sentiment
 from .pr_tagger import PRTagger
 from .pr_sentiment import predict_comment_valence
-from ..sentiment.analyze import analyze as vad_analyze, analyze_many as vad_many
+from ..sentiment.analyze import analyze as vad_analyze
+from ..sentiment.hybrid import hybrid_analyze, hybrid_many
 
 
 def _clip_id(video_path: str) -> str:
@@ -83,17 +84,25 @@ class ClipAgent:
         # G5 P/R 打标
         pr_res = PRTagger(self.vlm_tagger).tag(keyframes, content_summary, info.get("duration_sec", 0))
 
-        # G6 情感：内容→四分类（AI 预标）；评论→VAD（不做 mixed）
-        content_label = vad_analyze(content_summary, include_mixed=True)["label"]
-        content_diag = vad_analyze(content_summary, include_mixed=False)
-        frame_vad = [{"t": a.timestamp, **vad_analyze(a.summary, include_mixed=False)} for a in analyses if a.summary]
+        # G6 情感：内容→四分类（AI 预标）；评论→VAD（hybrid：词典×蒸馏×校准，无 mixed）
+        self.vad_mode = (self.cfg.get("sentiment", "mode", default="hybrid") or "hybrid").lower()
+        if self.vad_mode == "hybrid":
+            content_label = hybrid_analyze(content_summary)["label"]
+            content_diag = hybrid_analyze(content_summary)
+            frame_vad = [{"t": a.timestamp, **hybrid_analyze(a.summary)} for a in analyses if a.summary]
+        else:
+            content_label = vad_analyze(content_summary, include_mixed=True)["label"]
+            content_diag = vad_analyze(content_summary, include_mixed=False)
+            frame_vad = [{"t": a.timestamp, **vad_analyze(a.summary, include_mixed=False)} for a in analyses if a.summary]
         comment_vad = None
         comment_details = []
         if comments:
             texts = [c if isinstance(c, str) else (c.get("text") or "") for c in comments]
-            agg = vad_many(texts)
-            comment_vad = {k: agg[k] for k in ("n", "dist", "net", "mean_valence", "mean_arousal", "mean_dominance")}
-            comment_details = [{"text": t[:100], **d} for t, d in zip(texts, agg["details"])][:200]
+            agg = hybrid_many(texts) if self.vad_mode == "hybrid" else None
+            if agg is None:
+                agg = None
+            comment_vad = {k: agg[k] for k in ("n", "dist", "net", "mean_vad_llm")} if agg else None
+            comment_details = [{"text": t[:100], **d} for t, d in zip(texts, agg["details"])][:200] if agg else []
         pr_mapping = predict_comment_valence(pr_res, content_label, comment_vad)
 
         annotation = {
@@ -147,8 +156,9 @@ class ClipAgent:
                   f"- **{a.get('content_label') or '—'}**（人工复核请写 human_correction）"]
         if s.get("comments"):
             cm = s["comments"]
+            mv = cm.get("mean_vad_llm") or {}
             lines.append(f"- 评论实测（{cm['n']} 条）：正 {cm['dist'].get('positive', 0):.1%} / 负 {cm['dist'].get('negative', 0):.1%} / 中 {cm['dist'].get('neutral', 0):.1%}，净情绪 {cm['net']}"
-                         + f"　均值 VAD：v={cm['mean_valence']} a={cm['mean_arousal']} d={cm['mean_dominance']}")
+                         + f"　均值 VAD：v={mv.get('v')} a={mv.get('a')} d={mv.get('d')}")
         pm = s.get("pr_mapping") or {}
         if pm:
             lines.append(f"- P/R→评论预测：{pm.get('label')}（v={pm.get('valence')}）分布 {pm.get('dist')}")
