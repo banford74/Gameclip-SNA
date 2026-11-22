@@ -88,8 +88,10 @@ def _scan(text: str):
     return hits
 
 
-def analyze(text: str, use_nrc: bool = True) -> dict:
-    """对一段文本算情感 VAD。"""
+def analyze(text: str, use_nrc: bool = True, include_mixed: bool = True) -> dict:
+    """对一段文本算情感 VAD。
+    include_mixed=False 用于评论：评论只判 VAD，不做四分类（mixed 只属于内容标注）。
+    两向证据并存时按较强一侧归类；势均力敌则归中性。"""
     if not text or not text.strip():
         return {"label": "neutral", "intensity": 1, "valence": 0.5, "arousal": 0.3,
                 "dominance": 0.5, "n_hits": 0, "hits": [], "emotions": {}}
@@ -159,7 +161,7 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
     val = sum(v * w for v, w in zip(vs, ws)) / total_w
     ar = sum(ars) / len(ars)
     dom = sum(ds) / len(ds)
-    if pos_score > 0 and neg_score > 0 and min(pos_score, neg_score) / max(pos_score, neg_score) > 0.5:
+    if include_mixed and pos_score > 0 and neg_score > 0 and min(pos_score, neg_score) / max(pos_score, neg_score) > 0.5:
         label = "mixed"
     elif val >= 0.6:
         label = "positive"
@@ -167,6 +169,14 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
         label = "negative"
     else:
         label = "neutral"
+    if not include_mixed and label == "mixed":
+        # 评论不做 mixed：倾向更强的一侧，平局归中性
+        if pos_score > neg_score * 1.1:
+            label = "positive"
+        elif neg_score > pos_score * 1.1:
+            label = "negative"
+        else:
+            label = "neutral"
     intensity = 1
     if abs(val - 0.5) >= 0.3:
         intensity = 4
@@ -194,20 +204,20 @@ def _seed_index():
 
 
 def analyze_many(texts: list[str]) -> dict:
-    """评论集合 → 分布 + 均值 VAD。"""
+    """评论集合 → VAD 均值 + 分布（评论不做 mixed，只 pos/neg/neutral）。"""
     from collections import Counter
     labels = []
     v = a = d = 0.0
     n = 0
     details = []
     for t in texts:
-        r = analyze(t)
+        r = analyze(t, include_mixed=False)
         labels.append(r["label"])
         v += r["valence"]; a += r["arousal"]; d += r["dominance"]; n += 1
         details.append(r)
     c = Counter(labels)
     total = max(n, 1)
-    return {"n": n, "dist": {k: round(c.get(k, 0) / total, 4) for k in ("positive", "negative", "neutral", "mixed")},
+    return {"n": n, "dist": {k: round(c.get(k, 0) / total, 4) for k in ("positive", "negative", "neutral")},
             "net": round((c.get("positive", 0) - c.get("negative", 0)) / total, 4),
             "mean_valence": round(v / total, 4), "mean_arousal": round(a / total, 4),
             "mean_dominance": round(d / total, 4), "details": details}
