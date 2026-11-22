@@ -1,97 +1,78 @@
-# Gameclip-SNA · 游戏短视频多模态标注与微调工作流
+# Gameclip-SNA · 游戏短视频 P/R 标注与情感向度工作流
 
-> 把「游戏短视频」从下载 → 抽帧 → 多模态理解 → **P/R 创意特征打标** → 云端人工确认 → 软标签 → 微调，
-> 收成一条可复现的流水线。服务于 CSS5230 项目《From Content to Contagion》的 Task A/B。
+> 下载 → 抽帧 → 多模态理解 → **P/R 创意特征打标** → **情感向度（VAD）** → 云端人工确认 → 软标签/微调。
+> 服务 CSS5230《From Content to Contagion》Task A（内容 stance）/ Task B（评论 valence）。
 
-## 标签体系（主：P/R 双层）
+## 标签体系
 
-- **P 码 15 项**（情节层：社死/刚枪/变装/回忆杀…，叙事骨架，可多选）
+- **P 码 15 项**（情节层：社死/刚枪/变装/回忆杀…，可多选）
 - **R 码 91 项**（视觉特征：开场钩子/战斗/BGM/画幅/剪辑节奏…，有/无 + 少量枚举）
-- 十级机械标签（和平精英版本体系）保留为**辅助**（`ua10` 字段），其「知识蒸馏+投票+置信分层」方法已移植到 P/R。
-- 详见 [docs/PR-LABEL-SYSTEM.md](docs/PR-LABEL-SYSTEM.md)。
+- **情感向度**：内容与评论各算 VAD（valence/arousal/dominance）+ 强度 + 标签，词典来自 NRC-VAD/NRC-Emotion 多语言对齐表（中文列）+ 自建口语种子。
+- 十级机械标签（和平精英版本体系）**已弃用**，其「知识蒸馏/投票/置信分层」方法已移植到 P/R。
+- 详见 [docs/PR-LABEL-SYSTEM.md](docs/PR-LABEL-SYSTEM.md)、[docs/SENTIMENT-VAD.md](docs/SENTIMENT-VAD.md)。
 
 ## 目录
 
 ```
 src/
-  ua_agent/            Agent：下载→抽帧→关键帧→VLM理解→P/R打标→报告/标注
-    agent.py           ClipAgent 主编排（G1-G6）
-    pr_tagger.py       P/R 打标器（A=VLM 直判 + B=规则层表里映射；置信分层）
+  ua_agent/            Agent：下载→抽帧→关键帧→VLM 理解→P/R 打标→情感→报告/标注
+    agent.py           ClipAgent 主流程（G1–G6）
+    pr_tagger.py       P/R 打标（VLM A 路 + 规则层 B 路，置信分层）
     pr_codebook.py     15 P + 91 R 码表与校验
-    knowledge.py       十级标签词表/元数据规则（辅助体系）
+    pr_sentiment.py    P/R → 评论 valence 先验映射（可被 bootstrapp 更新）
     download.py        抖音无登录下载（feed API + CDN）
-    cloud.py           GitHub Release 上传 + clips.csv 人工确认闭环
-    train_agent.py     知识库构建（bootstrap / --from-xlsx 学习型）
-    run.py             CLI：--video / --url / --labels / --game / --format
-    ua_src/            多模态引擎（抽帧/关键帧/VLM/评论/报告，vendor 自 UA-ClipInsight）
+    cloud.py           Release 上传 + clips.csv（预览列前置、human_correction）
+    run.py             CLI
+    ua_src/            多模态引擎（抽帧/关键帧/VLM/评论/报告）
+  sentiment/           情感 VAD（词典 + 学习器 + 校准脚本）
+    lexicons.py        NRC 多语言表 → 中文 VAD/Emotion 词典（缓存）
+    analyze.py         最长匹配/否定/程度/转折/虚拟语气 → VAD
+    learn.py           从标注评论学词表（bootstrapp，5 折 CV）
   config.py codebook.py soft_labels.py metrics.py models.py
   train_taskA.py taskB.py falsify.py ch_sims_check.py balance.py
-configs/balance_plan.json   多游戏/多形态配比与切分（防过拟合）
-data/clips.csv              标注总表（AI 预标 + human_correction 回填）
-docs/                       下载 playbook / 标签体系 / 集成说明
-scripts/dl_mobile.js        抖音下载参考实现（node）
+configs/balance_plan.json   多游戏/多形态配比 + OOD 留出（防过拟合）
+data/clips.csv              标注总表（预览/情感/人工回填）
+data/lexicons/              vad.json / emo.json / zh_seed.json
+docs/                       标签体系 / 情感设计 / 下载 playbook
+scripts/                    make_player.py（Pages 播放页）、dl_mobile.js
 ```
 
 ## 快速开始
 
 ```bash
 pip install -r requirements.txt
-export ZAI_API_KEY=...        # glm-5.3-flashx（视觉逐帧）
-export DEEPSEEK_API_KEY=...   # deepseek-flash（P/R 打标通道）
+export ZAI_API_KEY=...        # 逐帧视觉（glm-5.3-flashx）
+export DEEPSEEK_API_KEY=...   # P/R 打标通道（deepseek-flash）
 
-# 单条：本地视频
-python -m src.ua_agent.run --video path/to/x.mp4 --labels both --game 和平精英 --format 实机录屏
-
-# 单条：平台链接（无登录下载）
+python -m src.ua_agent.run --video x.mp4 --game 和平精英 --format 实机录屏
 python -m src.ua_agent.run --url "https://www.douyin.com/video/7709870849365478116"
-
-# 训练 agent 的知识库
-python -m src.ua_agent.train_agent --bootstrap
-python -m src.ua_agent.train_agent --from-xlsx v2_rl_library.xlsx
+python -m src.ua_agent.run --video x.mp4 --comments-file comments.json   # 带评论 → 评论 VAD + P/R 映射
 ```
 
-产物：`outputs/<clip_id>/annotation.json`（P/R + ua10 + 逐帧）与 `report.md`。
+产物：`outputs/<clip_id>/annotation.json`（pr + sentiment{content, by_frame, comments, pr_mapping}）+ `report.md`。
 
-## 云端人工确认真值（2000 条）
+## 云端人工确认
 
 ```bash
-export GITHUB_TOKEN=...  UA_CLOUD_REPO=banford74/Gameclip-SNA
-python -m src.ua_agent.cloud      # CloudPublisher：关键帧传 release → clips.csv 追加行
+export GITHUB_TOKEN=...  UA_CLOUD_REPO=banford74/Gameclip-SNA  UA_PAGES_BASE=https://banford74.github.io/Gameclip-SNA
+python -m src.ua_agent.cloud
 ```
 
-人工在 `data/clips.csv` 的 `human_correction` 列回填修正，`review_status` 置 `corrected`；
-回写后作为 gold → `src/soft_labels.py` → `src/train_taskA.py` / `src/taskB.py`。
+`clips.csv` 列顺序：`clip_id, game, format, preview_url, human_correction, review_status, pr_p, pr_conf, content_label, content_vae, comment_pred, ...`（预览与人工列前置）。
+人工回填 `human_correction`（修正 P/R、改情感标签）→ `review_status=corrected` → 作为 gold 进 `soft_labels.py` / 训练。
 
-## 预览链路（不经过平台，一键播放/下载）
+## 情感校准（已跑，务必看结论）
 
-每条 clip 在 `clips.csv` 里有三类链接：
+在 780 条三 rater 评论上做聚合对比：v1 GT 净情绪 +0.254 vs 词典 +0.212（✅）；v2 GT −0.168 vs 词典 +0.14（❌ 偏乐观）。
+——词典兜得住阳光内容、兜不住软性吐槽；v2 需要 LLM 上下文标注 + 微调。详见 [docs/SENTIMENT-VAD.md](docs/SENTIMENT-VAD.md)。
 
-| 列 | 用途 | 示例 |
-|---|---|---|
-| `source_url` | 平台原链（溯源） | `https://www.douyin.com/video/...` |
-| `preview_url` | **480p 压缩预览，浏览器内直接播放**（GitHub Pages 托管） | `https://banford74.github.io/Gameclip-SNA/media/xxx_preview.mp4` |
-| `video_download_url` | 原片（GitHub Release 资产，点击下载） | `https://github.com/.../releases/download/clips-v1/xxx.mp4` |
-| `keyframe_url` | 首帧预览图 | Release 资产 |
+## 与论文的对应
 
-**播放页**：<https://banford74.github.io/Gameclip-SNA/>（由 `scripts/make_player.py` 从 clips.csv 生成）
-
-```bash
-python scripts/make_player.py     # 读 data/clips.csv → docs/index.html
-```
-
-**2000 条规模注意**：GitHub Pages 站点约 1GB 上限，480p 预览约 2MB/条 → 2000 条约 4GB，需分批：
-- 每 300–400 条一个批次 Pages（`docs/batch-01/…`，`make_player.py --batch`），或
-- 预览/原片迁到对象存储（Cloudflare R2 / 腾讯 COS 预签名 URL），clips.csv 换直链；
-- Release 只镜像原片（下载用途），不作为内嵌播放源（`Content-Type: octet-stream` 不能内嵌）。
-
-
-## 与论文/实验的对应
-
-- 本仓库打标结果 ≈ 论文 §2.6 的 **B5（商业 MLLM prompt 基线）** 的本地实现；
+- 本仓库打标 ≈ §2.6 的 **B5（商业 MLLM prompt 基线）**本地实现；
 - `src/falsify.py` 内置 §2.7 预注册证伪（B6 vs B6′ parity+ECE、品类内置换、Audience-Prior Null）；
-- 多游戏/多形态配比见 `configs/balance_plan.json`（含 OOD 留出：光遇 + 音乐/舞蹈）。
+- 多游戏/形态配比与 OOD 留出见 `configs/balance_plan.json`。
 
 ## 说明
 
 - 只用公开分发的视频流；不落盘 cookie、不逆向评论接口签名。
-- GitHub Release 只上传关键帧做预览（视频留本地/对象存储），单批 ≤100–200 资产。
+- Release 只镜像原片（下载用途），Pages 托管 480p 预览（可内嵌播放）；2000 条规模需分批 Pages 或对象存储。

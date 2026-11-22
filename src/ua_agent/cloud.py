@@ -1,21 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-GitHub 云端标注链路（替代迁移包里的 gh CLI，用 REST API + requests）。
+"""GitHub 云端标注链路（REST API，无需 gh CLI）：
+关键帧/原片上传 Release → clips.csv 追加（预览链接靠前、人工回填列靠前）→ 人工确认真值。
 
-流程（对应 ua-clipinsight-skeleton/run_pipeline.py 的 O2 模式）：
-  1) 每条素材：视频/关键帧上传到 release assets → 得到公开直链
-  2) 追加 clips.csv：预览链接 + AI 预打标 + human_correction（人工真值回填）+ 复核状态
-  3) 人工确认后：human_correction 回写 → 作为训练真值（soft_labels / train_taskA 的 gold）
-
-用法：
-  from pipeline.ua_agent.cloud import CloudPublisher
-  cp = CloudPublisher(repo="owner/repo", token=os.environ["GITHUB_TOKEN"])
-  cp.publish(annotation, video_path=..., keyframes=[...], upload="keyframes")
-  # 无 token/repo → dry-run：只写 clips.csv 与本地链接
-
-环境：
-  GITHUB_TOKEN    必需（repo 权限：contents:write）
-  UA_CLOUD_REPO   可选（owner/repo），与 --repo 等价
+环境：GITHUB_TOKEN、UA_CLOUD_REPO；可选 UA_PAGES_BASE（Pages 播放页前缀，用于拼 preview_url）
 """
 from __future__ import annotations
 
@@ -30,21 +17,26 @@ import requests
 API = "https://api.github.com"
 UPLOAD = "https://uploads.github.com"
 
+# clips.csv 列顺序：预览/人工回填前置，方便审核
+COLUMNS = ["clip_id", "game", "format", "preview_url", "human_correction", "review_status",
+           "pr_p", "pr_conf", "content_label", "content_vae", "comment_pred",
+           "source_url", "video_download_url", "keyframe_url", "duration_sec", "resolution",
+           "notes", "file"]
+
 
 class CloudPublisher:
     def __init__(self, repo: str | None = None, token: str | None = None,
                  tag: str = "clips", csv_path: str | Path = "data/clips.csv",
-                 upload: str = "keyframes", chunk_release: bool = True):
+                 upload: str = "keyframes", pages_base: str | None = None):
         self.repo = repo or os.environ.get("UA_CLOUD_REPO", "")
         self.token = token or os.environ.get("GITHUB_TOKEN", "")
         self.tag = tag
         self.csv_path = Path(csv_path)
-        self.upload = upload            # keyframes | both | none
-        self.chunk_release = chunk_release
+        self.upload = upload
+        self.pages_base = (pages_base or os.environ.get("UA_PAGES_BASE", "")).rstrip("/")
         self._release_id = None
         self._dry = not (self.repo and self.token)
 
-    # ---------- GitHub API ----------
     def _h(self):
         return {"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github+json"}
 
@@ -62,81 +54,81 @@ class CloudPublisher:
         self._release_id = r.json()["id"]
         return self._release_id
 
-    def upload_asset(self, path: str | Path) -> str:
-        """上传单个文件到 release，返回公开直链（dry-run 时返回空）。"""
+    def upload_asset(self, path: str | Path, name: str | None = None) -> str:
         if self._dry or self.upload == "none":
             return ""
         p = Path(path)
-        size = p.stat().st_size
-        if size > 2 * 1024**3:
+        if p.stat().st_size > 2 * 1024**3:
             raise ValueError(f"{p.name} 超过 GitHub 单文件 2GB 限制")
         rid = self._ensure_release()
         ctype = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
-        url = f"{UPLOAD}/repos/{self.repo}/releases/{rid}/assets?name={p.name}"
+        url = f"{UPLOAD}/repos/{self.repo}/releases/{rid}/assets?name={name or p.name}"
         with open(p, "rb") as f:
             r = requests.post(url, headers={**self._h(), "Content-Type": ctype}, data=f, timeout=600)
         r.raise_for_status()
         return r.json().get("browser_download_url", "")
 
     # ---------- clips.csv ----------
-    def register(self, annotation: dict, video_path: str, keyframes: list[str] | None = None,
+    def register(self, annotation: dict, video_path: str, preview_rel: str = "",
                  video_url: str = "", keyframe_url: str = "") -> dict:
-        """把一条素材登记进 clips.csv（含 AI 标签、人工回填空列、复核状态）。"""
+        s = annotation.get("sentiment") or {}
+        c = s.get("content") or {}
+        pm = (s.get("pr_mapping") or {})
+        cm = s.get("comments") or {}
         row = {
             "clip_id": annotation.get("clip_id", ""),
-            "file": Path(video_path).name,
             "game": annotation.get("game", ""),
             "format": annotation.get("format", ""),
-            "duration_sec": annotation.get("meta", {}).get("duration_sec", ""),
-            "resolution": f"{annotation.get('meta', {}).get('width')}x{annotation.get('meta', {}).get('height')}",
-            "source_url": annotation.get("source", ""),
-            "cloud_video_url": video_url,
-            "keyframe_url": keyframe_url,
-            "labels_mode": annotation.get("labels_mode", ""),
+            "preview_url": (self.pages_base + "/" + preview_rel.lstrip("/")) if (self.pages_base and preview_rel) else "",
+            "human_correction": "",
+            "review_status": "pending",
             "pr_p": "、".join(p["id"] for p in (annotation.get("pr") or {}).get("p_codes") or []),
             "pr_conf": (annotation.get("pr") or {}).get("confidence", ""),
-            "ua10": json.dumps(annotation.get("ua10") or {}, ensure_ascii=False),
-            "ai_labels": json.dumps({"pr": annotation.get("pr"), "ua10": annotation.get("ua10")},
-                                    ensure_ascii=False)[:9000],
-            "human_correction": "",       # 人工真值回填（P/R 修正、情感标注）
-            "review_status": "pending",   # pending / accepted / corrected / rejected
+            "content_label": c.get("label", ""),
+            "content_vae": f"v={c.get('valence')};a={c.get('arousal')};d={c.get('dominance')}",
+            "comment_pred": json.dumps({"label": pm.get("label"), "dist": pm.get("dist"),
+                                        "obs": {"net": cm.get("net"), "dist": cm.get("dist")}},
+                                       ensure_ascii=False) if pm else "",
+            "source_url": annotation.get("source", ""),
+            "video_download_url": video_url,
+            "keyframe_url": keyframe_url,
+            "duration_sec": annotation.get("meta", {}).get("duration_sec", ""),
+            "resolution": f"{annotation.get('meta', {}).get('width')}x{annotation.get('meta', {}).get('height')}",
             "notes": "",
+            "file": Path(video_path).name,
         }
         self._append_csv(row)
         return row
 
     def _append_csv(self, row: dict):
         self.csv_path.parent.mkdir(parents=True, exist_ok=True)
-        exists = self.csv_path.exists()
         rows = []
-        if exists:
+        if self.csv_path.exists():
             with open(self.csv_path, encoding="utf-8-sig") as f:
                 rows = list(csv.DictReader(f))
         rows = [r for r in rows if r.get("clip_id") != row["clip_id"]] + [row]
         with open(self.csv_path, "w", newline="", encoding="utf-8-sig") as f:
-            w = csv.DictWriter(f, fieldnames=list(row.keys()))
+            w = csv.DictWriter(f, fieldnames=COLUMNS)
             w.writeheader()
             w.writerows(rows)
 
-    # ---------- 一键发布 ----------
     def publish(self, annotation: dict, video_path: str, keyframes: list[str] | None = None,
-                out_dir: str | None = None) -> dict:
-        """上传（可选）+ 登记。返回 {video_url, keyframe_url, csv}。"""
-        video_url = keyframe_url = ""
+                preview_rel: str = "") -> dict:
+        keyframe_url = video_url = ""
         if self.upload in ("both", "keyframes") and keyframes:
             try:
                 keyframe_url = self.upload_asset(keyframes[0])
-            except Exception as e:  # 网络/权限问题不阻断登记
+            except Exception as e:
                 print(f"[cloud] 关键帧上传失败：{e}")
         if self.upload == "both":
             try:
                 video_url = self.upload_asset(video_path)
             except Exception as e:
                 print(f"[cloud] 视频上传失败：{e}")
-        self.register(annotation, video_path, keyframes, video_url, keyframe_url)
+        self.register(annotation, video_path, preview_rel, video_url, keyframe_url)
         return {"video_url": video_url, "keyframe_url": keyframe_url,
                 "csv": str(self.csv_path), "dry_run": self._dry}
 
 
 if __name__ == "__main__":
-    print("CloudPublisher ready（dry-run 模式 = 无 GITHUB_TOKEN / UA_CLOUD_REPO）")
+    print("CloudPublisher ready（dry-run = 无 GITHUB_TOKEN / UA_CLOUD_REPO）")

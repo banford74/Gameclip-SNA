@@ -1,8 +1,13 @@
-# 基础（本机已可用）
+# 基础
 numpy
 pandas
+requests
+pyyaml
+opencv-python-headless
+pillow
+openpyxl
 
-# 训练（本地 GPU 环境安装）
+# 训练（本地 GPU 环境）
 torch>=2.4
 transformers>=4.45
 peft>=0.13
@@ -12,5 +17,5 @@ accelerate
 faster-whisper
 
 # 数据（可选）
-pyarrow          # parquet
-imageio-ffmpeg   # ffmpeg 缺失时的内置二进制回退
+pyarrow
+imageio-ffmpeg
