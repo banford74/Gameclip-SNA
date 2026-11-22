@@ -19,7 +19,7 @@ UPLOAD = "https://uploads.github.com"
 
 # clips.csv 列顺序：预览/人工回填前置，方便审核
 COLUMNS = ["clip_id", "game", "format", "preview_url", "human_correction", "review_status",
-           "pr_p", "pr_conf", "content_label", "content_vae", "comment_pred",
+           "pr_p", "pr_conf", "content_label", "comment_vad", "comment_pred",
            "source_url", "video_download_url", "keyframe_url", "duration_sec", "resolution",
            "notes", "file"]
 
@@ -72,7 +72,6 @@ class CloudPublisher:
     def register(self, annotation: dict, video_path: str, preview_rel: str = "",
                  video_url: str = "", keyframe_url: str = "") -> dict:
         s = annotation.get("sentiment") or {}
-        c = s.get("content") or {}
         pm = (s.get("pr_mapping") or {})
         cm = s.get("comments") or {}
         row = {
@@ -84,8 +83,10 @@ class CloudPublisher:
             "review_status": "pending",
             "pr_p": "、".join(p["id"] for p in (annotation.get("pr") or {}).get("p_codes") or []),
             "pr_conf": (annotation.get("pr") or {}).get("confidence", ""),
-            "content_label": c.get("label", ""),
-            "content_vae": f"v={c.get('valence')};a={c.get('arousal')};d={c.get('dominance')}",
+            "content_label": annotation.get("content_label", ""),
+            "comment_vad": json.dumps({"v": cm.get("mean_valence"), "a": cm.get("mean_arousal"),
+                                       "d": cm.get("mean_dominance"), "net": cm.get("net"),
+                                       "dist": cm.get("dist")}, ensure_ascii=False) if cm else "",
             "comment_pred": json.dumps({"label": pm.get("label"), "dist": pm.get("dist"),
                                         "obs": {"net": cm.get("net"), "dist": cm.get("dist")}},
                                        ensure_ascii=False) if pm else "",

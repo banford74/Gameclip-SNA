@@ -42,7 +42,10 @@ def main(argv=None):
 
     comments = None
     if args.comments_file:
-        comments = json.loads(Path(args.comments_file).read_text(encoding="utf-8"))
+        raw = json.loads(Path(args.comments_file).read_text(encoding="utf-8"))
+        if isinstance(raw, dict):
+            raw = raw.get("comments") or raw.get("rows") or []
+        comments = raw
 
     agent = ClipAgent(config_path=args.config)
     res = agent.analyze(video, url=url, comments=comments, out_dir=args.out,
@@ -52,7 +55,8 @@ def main(argv=None):
         "clip_id": res["clip_id"], "out_dir": res["out_dir"],
         "pr_p": [p["id"] for p in (res["pr"] or {}).get("p_codes", [])],
         "pr_confidence": (res["pr"] or {}).get("confidence"),
-        "content_vad": {k: ann["sentiment"]["content"].get(k) for k in ("label", "valence", "arousal")},
+        "content_label": ann.get("content_label"),
+        "comment_vad": ann["sentiment"].get("comments"),
         "comment_pred": (ann["sentiment"].get("pr_mapping") or {}).get("dist"),
         "elapsed_s": ann["elapsed_s"],
     }, ensure_ascii=False, indent=1))

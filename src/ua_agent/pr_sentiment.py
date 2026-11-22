@@ -40,11 +40,17 @@ R_MODIFIERS = {
 }
 
 
-def predict_comment_valence(pr: dict | None, content_vad: dict | None = None,
+# 内容四分类 → valence 先验（内容侧不标 VAD，只给四分类）
+CONTENT_LABEL_VALENCE = {
+    "positive": 0.72, "negative": 0.28, "neutral": 0.5, "mixed": 0.5,
+}
+
+
+def predict_comment_valence(pr: dict | None, content_label: str | None = None,
                             comment_obs: dict | None = None) -> dict:
     """
     pr: {"p_codes": [{"id": ...}], "r_codes": {...}}
-    content_vad: {"valence":..., "arousal":...} 词典口径
+    content_label: 内容四分类（positive/negative/neutral/mixed）
     comment_obs: {"net": ..., "dist": ...} 实测（若有，作为校准）
     返回 {"valence","arousal","label","dist":{"pos","neg","neu"},"rationale","priors_used"}
     """
@@ -59,10 +65,10 @@ def predict_comment_valence(pr: dict | None, content_vad: dict | None = None,
     r_hits = pr.get("r_codes") or {}
     adj = sum(mod for rid, mod in R_MODIFIERS.items()
               if r_hits.get(rid) not in (None, "", "无"))
-    if content_vad:
-        vs.append(float(content_vad.get("valence", 0.5)) * 1.0)
-        ars.append(float(content_vad.get("arousal", 0.5)))
-        used.append("content_vad")
+    if content_label and content_label in CONTENT_LABEL_VALENCE:
+        vs.append(CONTENT_LABEL_VALENCE[content_label])
+        ars.append(0.6)
+        used.append(f"content={content_label}")
     val = (sum(vs) / len(vs) if vs else 0.5) + adj
     ar = sum(ars) / len(ars) if ars else 0.5
     val = max(0.05, min(0.95, val))
@@ -74,7 +80,7 @@ def predict_comment_valence(pr: dict | None, content_vad: dict | None = None,
     s = pos + neg + neu
     dist = {"pos": round(pos / s, 3), "neg": round(neg / s, 3), "neu": round(neu / s, 3)}
     label = "positive" if val >= 0.6 else ("negative" if val <= 0.4 else "neutral")
-    rationale = f"基于 P 码先验 {used} + R 码修正 {adj:+.2f}；内容 VAD v={content_vad.get('valence') if content_vad else 'n/a'}"
+    rationale = f"基于 P 码先验 {used} + R 码修正 {adj:+.2f}"
     if comment_obs:
         rationale += f"；已观测评论净情绪 {comment_obs.get('net')}（可作为校准误差）"
     return {"valence": round(val, 4), "arousal": round(ar, 4), "label": label,
@@ -83,4 +89,4 @@ def predict_comment_valence(pr: dict | None, content_vad: dict | None = None,
 
 if __name__ == "__main__":
     demo = {"p_codes": [{"id": "P104"}, {"id": "P113"}], "r_codes": {"R451": "有", "R455": "无"}}
-    print(predict_comment_valence(demo, {"valence": 0.62, "arousal": 0.7}))
+    print(predict_comment_valence(demo, "positive"))

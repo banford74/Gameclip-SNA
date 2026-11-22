@@ -9,8 +9,10 @@
 
 | | 对象 | 口径 | 字段 | 是否含 mixed |
 |---|---|---|---|---|
-| **A** | 视频内容（素材本身） | 四分类 stance + 强度 + 证据 | `content_label`, `content_intensity`, `evidence` | ✅ 允许 |
+| **A** | 视频内容（素材本身） | 四分类 stance + 证据 | `content_label`, `evidence` | ✅ 允许 |
 | **B** | 评论区（单条评论） | **VAD 三元组**（valence/arousal/dominance，1–9） | `v`, `a`, `d` | ❌ 禁止 |
+
+> 内容侧**不标强度、不标 VAD**：内容只需回答"素材表达什么立场"（四分类 + 证据）。强度既主观、对 Task B 也无增量信息（观众反应由评论 VAD 直接度量），所以不做。
 
 > 为什么分开：内容情绪（素材想表达什么）与观众反应（评论区实际情绪）是两件事，不能互相推导。内容用离散四分类是因为"混合/反差结构"本身就是内容设计的一部分；评论是海量短文本，离散四分类会把"强度"和"语境"信息压没，用连续 VAD 更可判、更省争议。
 
@@ -27,21 +29,16 @@
 | `neutral` | 素材基本无情绪诉求（纯信息/纯演示/纯实录） | 纯攻略讲解、参数罗列、无配乐的录屏 | 有 BGM 和情绪音的不要判 neutral |
 | `mixed` | 同一素材内正负情绪**并置或反转**（先惨后爽、先煽情后搞笑、反差打脸） | 社死名场面、反差整活、先抑后扬 | 只是"情绪强烈"≠ mixed |
 
-### 1.2 强度（1–4）
+### 1.2 内容侧不标强度
 
-| 强度 | 判定 |
-|---|---|
-| 1 | 情绪极淡（纯信息、无起伏） |
-| 2 | 有情绪但克制（日常向） |
-| 3 | 情绪明确（有笑点/爽点/泪点之一） |
-| 4 | 情绪强烈（连续爆点、强反差、强煽情） |
+内容只判四分类 + 写证据。原因：①"素材强度"高度主观（同一条素材两个人给 2 还是 4 都能自圆其说）；②Task B 要的是观众侧强度，直接由评论 VAD 的 arousal 度量，内容侧强度没有增量。
 
 ### 1.3 操作步骤（每条素材 1–2 分钟）
 
 1. 打开播放页（`docs/index.html` 或 `clips.csv` 的 `preview_url`），**完整看一遍**（不要只看首帧）。
 2. 打开 `clips.csv`，找到该 `clip_id` 行。
 3. 在 `human_correction` 列按固定格式填写：
-   `content=positive; intensity=3; evidence=12-18s 高光击杀 + 结尾彩蛋; note=可选`
+   `content=positive; evidence=12-18s 高光击杀 + 结尾彩蛋; note=可选`
 4. `review_status` 改为 `corrected`（存疑改 `flagged`，并把疑问写进 `notes`）。
 5. 不确定时**不要猜**：标 `flagged` 并在备注里写"哪一段拿不准"。
 
@@ -128,7 +125,7 @@
 **内容（clips.csv 行）**
 ```
 clip_id, game, format, preview_url, human_correction, review_status, ...
-human_correction 格式：content=<positive|negative|neutral|mixed>; intensity=<1-4>; evidence=<时间段/帧>; note=<可选>
+human_correction 格式：content=<positive|negative|neutral|mixed>; evidence=<时间段/帧>; note=<可选>
 ```
 
 **评论（JSON）**
@@ -150,6 +147,9 @@ A：无对应关系。内容 mixed 是"素材设计上的正负并置"；评论�
 
 **Q：为什么评论不用四分类？**
 A：四分类会压掉强度与语境；且"mixed"在短评论里无法稳定判定（一条 6 字评论谈不上"混合"）。VAD 保留强度，误差也更小（实测连续 VAD 与 LLM 双 rater 的均值几乎一致）。
+
+**Q：为什么内容不标强度/VAD？**
+A：内容侧只回答"素材表达什么立场"（四分类+证据）。强度主观、且 Task B 要的观众侧强度由评论 VAD 的 arousal 直接度量；内容再标一遍强度没有增量，反而增加标注成本与噪声。
 
 **Q：LLM 预标注可以直接用吗？**
 A：只作参考。人工必须独立判；预标注与人工不一致的条目正是"网络梗持续学习"的素材来源。

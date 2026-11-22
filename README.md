@@ -9,7 +9,7 @@
 - **R 码 91 项**（视觉特征：开场钩子/战斗/BGM/画幅/剪辑节奏…，有/无 + 少量枚举）
 - **情感向度**：内容与评论各算 VAD（valence/arousal/dominance）+ 强度 + 标签，词典来自 NRC-VAD/NRC-Emotion 多语言对齐表（中文列）+ 自建口语种子。
 - 十级机械标签（和平精英版本体系）**已弃用**，其「知识蒸馏/投票/置信分层」方法已移植到 P/R。
-- 详见 [docs/PR-LABEL-SYSTEM.md](docs/PR-LABEL-SYSTEM.md)、[docs/SENTIMENT-VAD.md](docs/SENTIMENT-VAD.md)。
+- 口径：**内容四分类（含 mixed）+ 证据；评论只打 VAD（1-9，禁止 mixed）**；详见 [docs/PR-LABEL-SYSTEM.md](docs/PR-LABEL-SYSTEM.md)、[docs/SENTIMENT-VAD.md](docs/SENTIMENT-VAD.md)、[docs/ANNOTATION-MANUAL.md](docs/ANNOTATION-MANUAL.md)。
 
 ## 目录
 

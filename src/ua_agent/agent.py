@@ -83,9 +83,10 @@ class ClipAgent:
         # G5 P/R 打标
         pr_res = PRTagger(self.vlm_tagger).tag(keyframes, content_summary, info.get("duration_sec", 0))
 
-        # G6 情感（词典 VAD）
-        content_vad = vad_analyze(content_summary)
-        frame_vad = [{"t": a.timestamp, **vad_analyze(a.summary)} for a in analyses if a.summary]
+        # G6 情感：内容→四分类（AI 预标）；评论→VAD（不做 mixed）
+        content_label = vad_analyze(content_summary, include_mixed=True)["label"]
+        content_diag = vad_analyze(content_summary, include_mixed=False)
+        frame_vad = [{"t": a.timestamp, **vad_analyze(a.summary, include_mixed=False)} for a in analyses if a.summary]
         comment_vad = None
         comment_details = []
         if comments:
@@ -93,7 +94,7 @@ class ClipAgent:
             agg = vad_many(texts)
             comment_vad = {k: agg[k] for k in ("n", "dist", "net", "mean_valence", "mean_arousal", "mean_dominance")}
             comment_details = [{"text": t[:100], **d} for t, d in zip(texts, agg["details"])][:200]
-        pr_mapping = predict_comment_valence(pr_res, content_vad, comment_vad)
+        pr_mapping = predict_comment_valence(pr_res, content_label, comment_vad)
 
         annotation = {
             "clip_id": clip_id, "source": url or str(video),
@@ -101,12 +102,12 @@ class ClipAgent:
             "meta": {k: info.get(k) for k in ("width", "height", "fps", "duration_sec", "frame_count")},
             "game": game, "format": format_,
             "pr": pr_res,
+            "content_label": content_label,          # 内容四分类（AI 预标，人工复核）
             "sentiment": {
-                "content": content_vad,
-                "by_frame": frame_vad,
-                "comments": comment_vad,
+                "comments": comment_vad,             # 评论 VAD（无 mixed）
                 "pr_mapping": pr_mapping,
-                "lexicon": {"zh": "NRC-VAD + NRC-Emo (Chinese-Simplified 列) + 种子词典"},
+                "model_diag": {"content_vad": content_diag, "by_frame_vad": frame_vad},
+                "lexicon": {"zh": "NRC-VAD + NRC-Emo (Chinese-Simplified 列) + emoji + 种子词典"},
             },
             "content_summary": content_summary,
             "frame_analyses": [a.to_dict() for a in analyses],
@@ -129,7 +130,6 @@ class ClipAgent:
                   f"- 游戏/形态：{a.get('game') or '—'} / {a.get('format') or '—'}"]
         pr = a.get("pr") or {}
         s = a.get("sentiment") or {}
-        c = s.get("content") or {}
         lines += ["", "## P 码（情节层）", ""]
         if pr.get("p_codes"):
             lines += ["| P 码 | 名称 | 来源 | 证据 |", "|---|---|---|---|"]
@@ -143,12 +143,12 @@ class ClipAgent:
         lines += ["", f"- 置信度：{pr.get('confidence')}"
                  + (f"　规则层候选：{'/'.join(pr.get('rule_p_candidates') or [])}" if pr.get("rule_p_candidates") else "")]
         # 情感
-        lines += ["", "## 情感向度（VAD）", "",
-                  f"- 内容：{c.get('label')}（v={c.get('valence')} a={c.get('arousal')} d={c.get('dominance')}）"
-                  f"　强度 {c.get('intensity')}　命中词：{'、'.join(h['term'] for h in (c.get('hits') or [])[:8])}"]
+        lines += ["", "## 内容情绪（四分类，AI 预标）", "",
+                  f"- **{a.get('content_label') or '—'}**（人工复核请写 human_correction）"]
         if s.get("comments"):
             cm = s["comments"]
-            lines.append(f"- 评论实测（{cm['n']} 条）：正 {cm['dist'].get('positive', 0):.1%} / 负 {cm['dist'].get('negative', 0):.1%} / 中 {cm['dist'].get('neutral', 0):.1%}，净情绪 {cm['net']}")
+            lines.append(f"- 评论实测（{cm['n']} 条）：正 {cm['dist'].get('positive', 0):.1%} / 负 {cm['dist'].get('negative', 0):.1%} / 中 {cm['dist'].get('neutral', 0):.1%}，净情绪 {cm['net']}"
+                         + f"　均值 VAD：v={cm['mean_valence']} a={cm['mean_arousal']} d={cm['mean_dominance']}")
         pm = s.get("pr_mapping") or {}
         if pm:
             lines.append(f"- P/R→评论预测：{pm.get('label')}（v={pm.get('valence')}）分布 {pm.get('dist')}")
