@@ -15,8 +15,9 @@ import re
 from pathlib import Path
 
 from .lexicons import build_vad, build_emo, EMOTIONS
+from .emoji import scan_emoji, _BRACKET
 
-SEED = Path(__file__).resolve().parents[1] / "data" / "lexicons" / "zh_seed.json"
+SEED = Path(__file__).resolve().parents[2] / "data" / "lexicons" / "zh_seed.json"
 
 NEGATORS = set("不没无别未莫非")
 INTENSIFIERS = ["太", "超", "特别", "非常", "极其", "巨", "贼", "很", "最"]
@@ -27,7 +28,7 @@ STOPWORDS = set("""什么 根本 一般 感觉 皮肤 游戏 这波 东西 时�
 活动 更新 抽奖 概率 价格 数值 伤害 攻击 防御 技能 装备 时装 特效 画面 音效 剧情 玩法 操作 手感 强度 平衡 来源
 其实 确实 当然 虽然 不过 而且 并且 或者 还有 以及 关于 对于 由于 通过 根据 按照 随着 比如 例如 包括 其中
 儿子 奶粉 养老金 兄弟 最佳 手法 奔跑 以前 信条 怜悯 僵尸 近战 修罗 沙鹰 暗区 突围 三角洲 黑海 北极星 重塑
-黑伤 影之刃 刀光 刀皮 切换 动作 原型 视频 评论区 弹幕 有人 那个 这个 自己 东西 事情 问题 感觉 玩家 武器""".split())
+黑伤 影之刃 刀光 刀皮 一般般 一般 还行 凑合 差不多 随便 无所谓 感觉 不知道 可能 大概""".split())
 
 _vad = None
 _emo = None
@@ -104,24 +105,27 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
     if re.search(r"(要是|如果|假如|倘若)", text) and re.search(r"(就好|就爽|就帅|就美|就完美|就舒服)", text):
         return {"label": "negative", "intensity": 2, "valence": 0.35, "arousal": 0.5,
                 "dominance": 0.4, "n_hits": 0, "hits": [{"term": "虚拟语气吐槽", "v": 0.35}], "emotions": {}}
-    hits = _scan(text)
+    emoji_hits = scan_emoji(text)
+    scan_text = _BRACKET.sub(" ", text)          # 方括号表情已单独识别，避免重复计分
+    hits = _scan(scan_text)
     if not use_nrc:
         hits = [h for h in hits if h[0] in _seed_index()]
-    if not hits:
+    if not hits and not emoji_hits:
         return {"label": "neutral", "intensity": 1, "valence": 0.5, "arousal": 0.3,
                 "dominance": 0.5, "n_hits": 0, "hits": [], "emotions": {}}
     vs, ars, ds, ws = [], [], [], []
+    emo_agg = {}
     pos_score = neg_score = 0.0
     last = None  # (term, v2, end_idx)
     for term, (v, a, d), idx in hits:
         v2 = v
         # 否定：词前 2 字
-        before = text[max(0, idx - 2):idx]
+        before = scan_text[max(0, idx - 2):idx]
         if any(ch in NEGATORS for ch in before):
             v2 = 1.0 - v2
         # 程度修饰
         intn = 1.0
-        before3 = text[max(0, idx - 3):idx]
+        before3 = scan_text[max(0, idx - 3):idx]
         if any(w in before3 for w in INTENSIFIERS):
             intn = 1.2
             a = min(1.0, a + 0.1)
@@ -138,6 +142,15 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
             pos_score += (v2 - 0.5) * 2 * w_
         else:
             neg_score += (0.5 - v2) * 2 * w_
+    # emoji（强信号，权重 2.5）
+    for surface, (v, a, d, lab, emos) in emoji_hits:
+        vs.append(v); ars.append(a); ds.append(d); ws.append(2.5)
+        for k, val_ in (emos or {}).items():
+            emo_agg[k] = emo_agg.get(k, 0) + val_
+        if v > 0.5:
+            pos_score += (v - 0.5) * 2 * 2.5
+        else:
+            neg_score += (0.5 - v) * 2 * 2.5
     total_w = sum(ws)
     if total_w < 2.0:                              # 证据不足 → 中性（宁可保守）
         return {"label": "neutral", "intensity": 1, "valence": 0.5, "arousal": 0.3,
@@ -161,8 +174,8 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
         intensity = 3
     elif abs(val - 0.5) >= 0.05:
         intensity = 2
-    # 情感细分（NRC）
-    emo = {}
+    # 情感细分（NRC + emoji）
+    emo = dict(emo_agg)
     for term, _v, _i in hits:
         e = (_emo.get("zh") or {}).get(term)
         if e:
@@ -171,7 +184,8 @@ def analyze(text: str, use_nrc: bool = True) -> dict:
                     emo[k] = emo.get(k, 0) + 1
     return {"label": label, "intensity": intensity,
             "valence": round(val, 4), "arousal": round(ar, 4), "dominance": round(dom, 4),
-            "n_hits": len(hits), "hits": [{"term": t, "v": round(v[0], 3)} for t, v, _ in hits[:12]],
+            "n_hits": len(hits) + len(emoji_hits), "hits": [{"term": t, "v": round(v[0], 3)} for t, v, _ in hits[:12]]
+            + [{"term": s, "v": round(v, 3)} for s, (v, _a, _d, _l, _e) in emoji_hits[:6]],
             "emotions": emo}
 
 
