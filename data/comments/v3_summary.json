@@ -1,0 +1,18 @@
+{
+ "n": 258,
+ "raters": [
+  "deepseek-flash",
+  "glm-5.3-flashx",
+  "qwen3.8-27b"
+ ],
+ "kappa": 0.5618,
+ "distribution": {
+  "neu": 0.4457,
+  "pos": 0.2713,
+  "neg": 0.2597,
+  "mixed": 0.0233
+ },
+ "net": "0.0116",
+ "labeled_at": "2026-11-22T13:53:58.867Z",
+ "source": "v3 (7709870849365478116)"
+}
