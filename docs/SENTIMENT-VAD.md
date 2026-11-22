@@ -56,3 +56,25 @@
 结论：**连续 VAD 比 4 分类更可判**（均值几乎一致、valence/arousal 中等相关）；dominance 词典抓不住（可先只报 v/a）。梗/反讽是主要误差源（如「待我用神识探查下」LLM v=6、词典中性；「四级蛋打绝密？」LLM 4.5、词典偏正）——**网络梗需要持续学习**：建议维护「未登录词队列」，把词典未命中但 LLM 给出极端 VAD 的 2–4 字片段收集起来，定期回填 `zh_seed.json`。
 
 **评论抓取（全量优先高赞）**：`scripts/scrape_comments.js` 走 CDP 网络拦截翻页（cursor 到底或上限），v3 实测 8 分钟抓到 **2166 条**（235 页，has_more 仍真），按 `digg_count` 降序落盘（`data/comments/v3_all.json`、`v3_top500.json`）。
+
+
+## 六、VAD 与"积极/消极/中等"的关系（概念澄清）
+
+**是的，VAD 本身包含三分类判断**——积极/消极/中等是 valence 轴上的分段，不是与 VAD 并列的另一套标签：
+
+```
+valence v ∈ [0,1]（或 1-9）
+  v > 0.6           → positive（积极）
+  v < 0.4           → negative（消极）
+  0.4 ≤ v ≤ 0.6     → neutral（中等/无感）
+arousal a          → 强度/唤醒（决定"多激烈"，不决定正负）
+dominance d        → 支配感（掌控 vs 无力，独立维度）
+```
+
+- **强度（intensity）**：由 |v−0.5|（或 arousal）映射 1–4 档，也属于 VAD 的子信息。
+- **mixed（混合）**：**不能**由单个 v 值导出。它是"正负证据同时存在"的双峰情形——需要看证据分布（正向词/emoji 的质量与负向词/emoji 的质量是否都显著）。当前实现规则：`pos_mass` 与 `neg_mass` 都 >0 且 min/max > 0.5 → mixed；否则按 v 阈值取三分类。
+- 因此：**分类标签是 VAD 的派生量**（label = f(v, pos_mass, neg_mass)），而不是独立标注。这也解释了为什么用连续 VAD 标注比 4 分类 gold 更稳：4 分类丢掉了强度与"混合"的边界信息，而 VAD 保留全部。
+
+**对 Task B 的用法**：
+- 监督信号用连续 VAD（v/a 均值 + 证据离散度）→ 任务目标从"分类分布"变成"valence 回归 + 分布校准"，与评论实测分布（pos/neg/neu 占比）通过阈值映射兼容；
+- 评估时同时报：连续相关（Spearman）、分类一致率（由 VAD 派生 label 对比人工 label）、混合样本单独统计。
