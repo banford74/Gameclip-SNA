@@ -62,6 +62,29 @@ python -m src.ua_agent.cloud      # CloudPublisher：关键帧传 release → cl
 人工在 `data/clips.csv` 的 `human_correction` 列回填修正，`review_status` 置 `corrected`；
 回写后作为 gold → `src/soft_labels.py` → `src/train_taskA.py` / `src/taskB.py`。
 
+## 预览链路（不经过平台，一键播放/下载）
+
+每条 clip 在 `clips.csv` 里有三类链接：
+
+| 列 | 用途 | 示例 |
+|---|---|---|
+| `source_url` | 平台原链（溯源） | `https://www.douyin.com/video/...` |
+| `preview_url` | **480p 压缩预览，浏览器内直接播放**（GitHub Pages 托管） | `https://banford74.github.io/Gameclip-SNA/media/xxx_preview.mp4` |
+| `video_download_url` | 原片（GitHub Release 资产，点击下载） | `https://github.com/.../releases/download/clips-v1/xxx.mp4` |
+| `keyframe_url` | 首帧预览图 | Release 资产 |
+
+**播放页**：<https://banford74.github.io/Gameclip-SNA/>（由 `scripts/make_player.py` 从 clips.csv 生成）
+
+```bash
+python scripts/make_player.py     # 读 data/clips.csv → docs/index.html
+```
+
+**2000 条规模注意**：GitHub Pages 站点约 1GB 上限，480p 预览约 2MB/条 → 2000 条约 4GB，需分批：
+- 每 300–400 条一个批次 Pages（`docs/batch-01/…`，`make_player.py --batch`），或
+- 预览/原片迁到对象存储（Cloudflare R2 / 腾讯 COS 预签名 URL），clips.csv 换直链；
+- Release 只镜像原片（下载用途），不作为内嵌播放源（`Content-Type: octet-stream` 不能内嵌）。
+
+
 ## 与论文/实验的对应
 
 - 本仓库打标结果 ≈ 论文 §2.6 的 **B5（商业 MLLM prompt 基线）** 的本地实现；
