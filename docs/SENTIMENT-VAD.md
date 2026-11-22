@@ -39,3 +39,20 @@
 2. **bootstrapp**：用 gold 反向更新 `zh_learned.json` 与 P/R 先验表（`pr_sentiment.PRIORS`），每轮用 v1/v2 口径回归验证。
 3. **P/R → 情感映射**：`pr_sentiment.predict_comment_valence()` 当前是规则先验（15 个 P 码各带 V/A/标签），下一步用 gold 学成小模型（码向量 → valence 分布，J-S 损失）。
 4. **评论爬取对照**：CDP DOM 抓取（`scripts/scrape_comments.js`），与视频标注对齐后进入 Task B 训练。
+
+
+## 五、emoji 与连续 VAD（2026-11-22 补）
+
+**emoji 已纳入识别**（`src/sentiment/emoji.py`）：Unicode emoji（😂🤣😍😭😡👍👎🔥💀…）与抖音方括号表情（[笑哭]/[捂脸]/[色]/[怒]/[666]…），各带 VAD + 标签 + 情感细分，作为强信号按权重 2.5 计入；方括号表情会先从正文剥离，避免与文字重复计分。
+
+**连续 VAD 标注**（高赞 Top300，deepseek-flash + glm-5.3-flashx 双 rater，1–9 分）与词典对照：
+
+| 维度 | Spearman | LLM 均值 | 词典均值 |
+|---|---|---|---|
+| valence | **0.46** | 5.33 | 5.45 |
+| arousal | **0.42** | 4.50 | 4.48 |
+| dominance | 0.08 | 5.00 | 5.03 |
+
+结论：**连续 VAD 比 4 分类更可判**（均值几乎一致、valence/arousal 中等相关）；dominance 词典抓不住（可先只报 v/a）。梗/反讽是主要误差源（如「待我用神识探查下」LLM v=6、词典中性；「四级蛋打绝密？」LLM 4.5、词典偏正）——**网络梗需要持续学习**：建议维护「未登录词队列」，把词典未命中但 LLM 给出极端 VAD 的 2–4 字片段收集起来，定期回填 `zh_seed.json`。
+
+**评论抓取（全量优先高赞）**：`scripts/scrape_comments.js` 走 CDP 网络拦截翻页（cursor 到底或上限），v3 实测 8 分钟抓到 **2166 条**（235 页，has_more 仍真），按 `digg_count` 降序落盘（`data/comments/v3_all.json`、`v3_top500.json`）。
