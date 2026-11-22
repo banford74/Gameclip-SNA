@@ -1,0 +1,44 @@
+# UA-ClipInsight agent 配置（VLM 网关、抽帧、关键帧、评论、报告）
+# 密钥走环境变量展开：${ZAI_API_KEY} / ${DEEPSEEK_API_KEY} / ${CUHKSZ_API_KEY}
+
+# 标签模式：pr = P/R 双层主体系（15 P + 91 R）；ua10 = 十级机械标签；both = 双轨
+labels:
+  mode: both
+
+vlm:
+  provider: zai
+  base_url: https://open.bigmodel.cn/api/paas/v4
+  api_key: ${ZAI_API_KEY}
+  model: glm-5.3-flashx
+  max_tokens: 8000
+  temperature: 0.2
+  timeout: 240
+
+# P/R 打标专用通道（flashx 的 reasoning 波动会吃掉预算；deepseek-flash 稳定且 JSON 可靠）
+vlm_tagger:
+  provider: deepseek
+  base_url: https://api.deepseek.com/v1
+  api_key: ${DEEPSEEK_API_KEY}
+  model: deepseek-flash
+  max_tokens: 16000
+  temperature: 0.2
+  timeout: 300
+
+frames:
+  output_dir: outputs/frames
+  interval_sec: 2.0
+  max_frames: 12
+  resize_long_edge: 1280
+
+keyframe:
+  blur_threshold: 60.0
+  dedup_hamming: 12
+  scene_change_threshold: 0.35
+
+comments:
+  platform: douyin
+  max_comments: 200
+  use_browser: false
+
+report:
+  out_dir: outputs
