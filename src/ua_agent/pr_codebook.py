@@ -139,6 +139,30 @@ def p_list_text() -> str:
     return " | ".join(f"{k} {v['name']}（{v['tier']}）" for k, v in P_CODES.items())
 
 
+def _load_ext() -> tuple[dict, dict, dict]:
+    """加载演化扩展（codebook_loop 启用后生效）：active_p / active_r / mapping_overrides。"""
+    from pathlib import Path
+    import json
+    p = Path(__file__).resolve().parents[2] / "configs" / "pr_codebook_ext.json"
+    if not p.exists():
+        return {}, {}, {}
+    try:
+        j = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}, {}, {}
+    return j.get("active_p", {}), j.get("active_r", {}), j.get("mapping_overrides", {})
+
+
+EXT_P, EXT_R, EXT_MAP = _load_ext()
+for _k, _v in EXT_P.items():
+    P_CODES.setdefault(_k, _v)
+for _k, _v in EXT_R.items():
+    R_CODES.setdefault(_k, {"name": _v.get("name", ""), "type": _v.get("type", "内容"), "kind": "bool"})
+for _pid, _over in EXT_MAP.items():
+    if _pid in P_CODES:
+        P_CODES[_pid]["r_map"] = _over
+
+
 def r_list_text() -> str:
     return " | ".join(f"{k} {v['name']}{'/枚举' if v['kind'] == 'enum' else ('/数值' if v['kind'] == 'free' else '')}"
                       for k, v in R_CODES.items())
