@@ -24,6 +24,8 @@ CSV = ROOT / "data" / "clips.csv"
 CODEBOOK = WS / "portfolio" / "src" / "codebook.json"
 OUT = ROOT / "docs" / "index.html"
 N_ANNOTATORS = 4
+# 内置默认同步地址（Apps Script Web App）——页面不带参数也自动回传；可用 ?sync= 或输入框覆盖
+DEFAULT_SYNC = "https://script.google.com/macros/s/AKfycbzHkV6B6xXSp6S_DyoJFZM3PWOQY2oZVD0uwbyNrOLtfymoc9sZHgsPuyOrCkKzA1qQmA/exec"
 
 
 def load_rows():
@@ -74,7 +76,7 @@ def main():
     cb = json.loads(CODEBOOK.read_text(encoding="utf-8"))
     codes = {"p": {k: v["name"] for k, v in cb["p"].items()},
              "r": {k: v["name"] for k, v in cb["r"].items()}}
-    data = {"codes": codes, "rows": rows, "n": N_ANNOTATORS, "counts": counts}
+    data = {"codes": codes, "rows": rows, "n": N_ANNOTATORS, "counts": counts, "defaultSync": DEFAULT_SYNC}
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     OUT.write_text(HTML_TMPL.replace("__DATA__", payload), encoding="utf-8")
     print(f"annotator written: {OUT} rows={len(rows)} p={len(codes['p'])} r={len(codes['r'])}")
@@ -150,7 +152,7 @@ a{color:var(--acc)}
   <a class="hint" href="progress.html" target="_blank" style="margin-left:auto">📊 进度汇总页</a>
 </div>
 <div class="bar" style="border-bottom:none;padding-top:0">
-  <span class="hint">可选：共享同步地址（Apps Script 等），填一次存本浏览器；存标注时自动 POST 一份</span>
+  <span class="hint">同步地址（已内置默认端点，自动回传；如需覆盖可改这里）</span>
   <input id="syncUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:240px">
   <span id="syncState" class="hint"></span>
   <span id="lastSave" class="hint"></span>
@@ -189,7 +191,7 @@ const ST_CN = {positive:'正向', negative:'负向', neutral:'中性', mixed:'�
 let labels = {};
 try { labels = JSON.parse(localStorage.getItem(LS) || '{}'); } catch(e) { labels = {}; }
 let page = 0;
-let SYNC = (new URLSearchParams(location.search).get('sync') || localStorage.getItem(SYNC_KEY) || '').trim();
+let SYNC = (new URLSearchParams(location.search).get('sync') || localStorage.getItem(SYNC_KEY) || DATA.defaultSync || '').trim();
 if (new URLSearchParams(location.search).get('sync')) localStorage.setItem(SYNC_KEY, SYNC);
 let syncTimer = null;
 
@@ -244,12 +246,21 @@ async function pushSync(){
   const mine = myLabels();
   const payload = {annotator: ANNOTATOR === 'all' ? 'all' : ANNOTATOR, saved_at: new Date().toISOString(),
                    count: Object.keys(mine).length, labels: mine};
+  const body = JSON.stringify(payload);
   try {
-    await fetch(SYNC, {method: 'POST', mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
-    if (st) { st.textContent = '已同步 ' + new Date().toLocaleTimeString() + '（' + Object.keys(mine).length + ' 条）'; st.className = 'hint'; }
+    // 优先普通 CORS 请求：能读到返回、可确认“真的写进去了”（Apps Script 回 ACAO: *）
+    const r = await fetch(SYNC, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body});
+    let msg = '';
+    try { const j = await r.json(); msg = j && (j.updated !== undefined) ? `（更新 ${j.updated} / 新增 ${j.appended}）` : ''; } catch (e) {}
+    if (st) { st.textContent = '已同步 ' + new Date().toLocaleTimeString() + '（' + Object.keys(mine).length + ' 条）' + msg; st.className = 'hint'; }
   } catch (e) {
-    if (st) { st.textContent = '同步失败：' + e.message; st.className = 'hint bad'; }
+    try {
+      await fetch(SYNC, {method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain;charset=utf-8'}, body});
+      if (st) { st.textContent = '已发送（无法确认响应）' + new Date().toLocaleTimeString(); st.className = 'hint'; }
+    } catch (e2) {
+      if (st) { st.textContent = '同步失败：' + e2.message; st.className = 'hint bad'; }
+    }
   }
 }
 

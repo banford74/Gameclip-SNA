@@ -39,11 +39,25 @@ var HEAD = ['annotator', 'clip_id', 'stance', 'intensity', 'p_codes', 'r_codes',
 
 function doGet(e) {
   var g = getSheet_();
+  var p = (e && e.parameter) || {};
+  if (String(p.format || '').toLowerCase() === 'csv') {
+    // 进度页直接读：GET <exec>?format=csv  → labels 表全量 CSV（带 CORS）
+    var values = g.sh.getDataRange().getValues();
+    var lines = values.map(function (row) {
+      return row.map(function (v) {
+        v = String(v == null ? '' : v);
+        return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }).join(',');
+    });
+    return ContentService.createTextOutput(lines.join('\n'))
+      .setMimeType(ContentService.MimeType.CSV);
+  }
   return ContentService.createTextOutput(JSON.stringify({
     ok: true,
     message: 'gameclip sync endpoint is up',
     spreadsheetUrl: g.ss.getUrl(),
-    rows: Math.max(0, g.sh.getLastRow() - 1)
+    rows: Math.max(0, g.sh.getLastRow() - 1),
+    csvUrl: ScriptApp.getService().getUrl() + '?format=csv'
   })).setMimeType(ContentService.MimeType.JSON);
 }
 

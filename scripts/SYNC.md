@@ -1,63 +1,48 @@
-# 进度同步设置（B：Google Apps Script，推荐跨网络用）
+# 进度同步（已内置默认端点，开箱即用）
 
-## 0. 一句话
+## 0. 现状（2026-11-27）
 
-标注页每次保存（或点「💾 存档并回传」）会把该标注员的全量标注 POST 到一个端点；端点把数据
-写进 Google Sheet。这个端点 URL 就叫「同步地址」。**部署一次，4 个人共用。**
+- **同步地址已内置到标注页**（`make_annotator.py` 的 `DEFAULT_SYNC`），总链接和 `?a=N` 链接都自动回传，
+  不需要每个人再配置。
+- 端点：`https://script.google.com/macros/s/AKfycbzHkV6B6xXSp6S_DyoJFZM3PWOQY2oZVD0uwbyNrOLtfymoc9sZHgsPuyOrCkKzA1qQmA/exec`
+- 数据表：https://docs.google.com/spreadsheets/d/1mDYOaQtzTm6qOseEsgs_IW093fDYbfhSTr9vzr5CuIc/edit （工作表 `labels`）
+- 已验证：标注 → 自动 POST → Sheet 行数增长；点「💾 存档并回传」可立即强制回传一次。
 
----
+## 1. 标注页怎么用
 
-## 1. 部署端点（约 5 分钟，需你的 Google 账号）
+- 总链接：`https://banford74.github.io/Gameclip-SNA/`（默认标注员 1）
+- 分工链接：`?a=1` / `?a=2` / `?a=3` / `?a=4`
+- 每次改动自动存本地（localStorage）+ 自动回传（防抖 1.2 秒）；「💾 存档并回传」= 立即回传并显示结果
 
-1. 打开 https://script.google.com → 左上「**新建项目**」→ 项目名填 `gameclip-sync`
-2. 打开 `scripts/sync_endpoint.gs` → 全选复制 → 粘贴覆盖编辑器里的 `Code.gs` 内容 → **Ctrl+S 保存**
-3. 右上「**部署**」→「**新建部署**」→ 齿轮图标选「**Web 应用**」
-   - 说明：`gameclip-sync`
-   - **执行身份**：`我（Me）`
-   - **访问权限**：`任何人（Anyone）`
-4. 点「部署」→ 首次会跳授权：选你的账号 →「高级」→「转至 gameclip-sync（不安全）」→「允许」
-5. 复制生成的「**Web 应用 URL**」：`https://script.google.com/macros/s/..../exec`
-   —— 这就是同步地址
+## 2. 进度汇总页（自动刷新）
 
-> 以后改了脚本：部署 → 管理部署 → 编辑（铅笔）→「版本」选**新版本** → 部署，才会生效。
+**方式一（推荐，需先重新部署一次 v2 脚本）**：脚本已加 `?format=csv` 输出，进度页直接读端点：
 
-## 2. 验证端点
-
-```bash
-python Gameclip-SNA/scripts/test_sync_endpoint.py https://script.google.com/macros/s/.../exec
+```
+https://banford74.github.io/Gameclip-SNA/progress.html?data=<exec URL>?format=csv
 ```
 
-期望：GET 返回 `{"ok": true, "message": ..., "spreadsheetUrl": ...}`；
-POST 返回 `{"ok": true, "updated": 0, "appended": 1, "spreadsheetUrl": ...}`，
-并在 Google 云端硬盘里出现《Gameclip labels》表格（工作表 `labels`）。
-（测试行 annotator=test / clip_id=__probe__，用完手动删掉即可。）
+> 重新部署方法：打开 Apps Script 项目 → 用仓库里最新的 `scripts/sync_endpoint.gs` 覆盖保存 →
+> 部署 → 管理部署 → 编辑（铅笔）→「版本」选**新版本** → 部署。然后上面的链接即可自动刷新（20 秒）。
 
-## 3. 发给标注员（每人一次）
+**方式二（不用重新部署）**：Google 表格 → 文件 → 共享 → 发布到网络 → 选 `labels` 工作表 CSV → 链接贴进
+`progress.html?data=<CSV链接>`（有几分钟缓存）。
 
-- 打开自己的标注页（如 `https://banford74.github.io/Gameclip-SNA/?a=2`）
-- 在「同步地址」输入框粘贴上面的 `/exec` URL → 回车（存在其浏览器 localStorage）
-- 或直接发带参数的链接（一次搞定）：
-  `https://banford74.github.io/Gameclip-SNA/?a=2&sync=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2Fxxx%2Fexec`
-- 之后每次保存都会自动回传；点「💾 存档并回传」= 立即回传一次；右上角显示「已同步 时间（N 条）」
+## 3. 验证
 
-## 4. 让进度汇总页自动刷新
+```bash
+python Gameclip-SNA/scripts/test_sync_endpoint.py <exec URL>
+```
 
-1. 打开 Google 表格《Gameclip labels》→ 文件 → 共享 → **发布到网络**
-2. 选工作表 `labels`、格式 **CSV** → 发布 → 复制链接
-3. 打开 `https://banford74.github.io/Gameclip-SNA/progress.html?data=<CSV链接>`（收藏，20 秒自动刷新）
+期望 GET 返回 `{"ok": true, "spreadsheetUrl": ...}`；POST 返回 `{"ok": true, "updated": 0, "appended": 1}`。
 
-> 注意：发布到网络的 CSV 有几分钟缓存，进度页显示的可能是几分钟前的数据，属正常。
+## 4. 备选（不用也能跑）
 
-## 5. 安全与配额
+- 本机同步服务：`python Gameclip-SNA/scripts/sync_server.py`（标注员开 `http://<本机IP>:8787/?a=N`）
+- 不配置：点「存档并回传」自动下载 CSV，发回负责人合并（`scripts/merge_labels.py`）
 
-- 拿到 URL 的人都能写入（无鉴权）——只发给 4 个标注员，不要公开
-- Apps Script 免费配额：每天执行时间足够 4 人（每次保存 1 次执行）；URL 抓取配额充裕
-- 数据只存在你的 Google 表格里；需要备份就直接下载 Sheet
+## 5. 安全
 
----
+- 拿到端点 URL 的人都能写入（无鉴权）——只发给 4 个标注员；如泄露可在 Apps Script 重新部署换 URL
+  （页面里的 `DEFAULT_SYNC` 需要同步更新）。
 
-## 备选方案（不用也能跑）
-
-- **A 本机同步服务**：`python Gameclip-SNA/scripts/sync_server.py`，标注员开 `http://<本机IP>:8787/?a=N`
-  （必须从该地址打开，https 页面 POST 到 http 局域网地址会被浏览器拦）
-- **C 不配置**：每人点「存档并回传」自动下载 CSV，发回负责人合并（`scripts/merge_labels.py`）
