@@ -155,6 +155,7 @@ function ingestText(text, src){
     const r = rows[i];
     const cid = (r[idx('clip_id')] || '').trim();
     if (!cid) continue;
+    if (!ROW.has(cid)) continue;      // 忽略测试行/未知 clip_id
     const a = (r[idx('annotator')] || '').trim() || (ROW.get(cid) ? String(ROW.get(cid).a) : '?');
     const stance = (r[idx('stance')] || '').trim();
     if (!stance) continue;
@@ -189,7 +190,9 @@ function fromLocal(){
 async function loadUrl(url){
   if (!url) return;
   try {
-    const r = await fetch(url, {cache: 'no-store'});
+    // 加缓存破坏参数：Apps Script 的 GET 响应会被 CDN 缓存，用 cb=时间戳 强制取最新
+    const u = url + (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+    const r = await fetch(u, {cache: 'no-store'});
     if (!r.ok) throw new Error('http ' + r.status);
     const text = await r.text();
     labels = new Map();                 // URL 模式以远端为准
@@ -314,6 +317,13 @@ document.getElementById('drop').addEventListener('drop', e => {
   readFiles(e.dataTransfer.files);
 });
 document.getElementById('loadUrl').addEventListener('click', () => loadUrl(document.getElementById('dataUrl').value.trim()));
+// ?data=<CSV/端点链接>：打开即自动载入并定时刷新
+const auto = new URLSearchParams(location.search).get('data');
+if (auto) {
+  const el = document.getElementById('dataUrl');
+  if (el) el.value = auto;
+  loadUrl(auto);
+}
 document.getElementById('clear').addEventListener('click', () => { labels = new Map(); render(); document.getElementById('drop').textContent = '已清空'; });
 render();
 </script>
