@@ -86,10 +86,19 @@ textarea,input[type=text],input[type=number]{background:#0d1014;color:var(--fg);
 .b-pend{background:#30363d;color:#8b949e}.b-done{background:#1f6f43;color:#d7ffe4}
 .row2{display:flex;gap:6px}.row2>*{flex:1}
 .imp{color:var(--acc);text-decoration:underline;cursor:pointer;font-size:12px}
+.legend{font-size:12px;color:var(--dim);background:#12151b;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0 4px;line-height:1.7}
+.legend b{color:#c9d1d9}
+.vad{font-size:11px;color:#8b949e;border-top:1px dashed var(--line);padding-top:4px}
+.vad b{color:#b8c0cc}
 .foot{margin-top:18px;color:var(--dim);font-size:11px;line-height:1.6}
 a{color:var(--acc)}
 </style></head><body>
 <h1>Gameclip-SNA · 人工标注工作台</h1>
+<div class="legend">
+  <b>本页标注对象 = 视频内容（Task A）</b>：内容四分类 + 强度 + P/R 码 + 证据。
+  「强度」指视频本身的情绪强度（1-4），「置信」是你对这次四分类判断的把握（0-1）。
+  评论情绪（Task B）<b>不在本页标注</b>——它是自动算的 VAD（1-9 连续分），只读展示在每张卡片底部，仅供对照。
+</div>
 <div class="bar">
   <select id="fGame"></select>
   <select id="fStatus">
@@ -169,6 +178,12 @@ function card(r){
   const pSel = lab.p_codes ? splitCodes(lab.p_codes) : aiP;
   const rSel = lab.r_codes ? splitCodes(lab.r_codes) : aiR;
   const stance = lab.stance || '';
+  let vad = null;
+  try { vad = r.vad ? JSON.parse(r.vad) : null; } catch (e) { vad = null; }
+  const d = (vad && vad.dist) || {};
+  const vadLine = (vad && vad.n)
+    ? `<div class="vad">评论观测（自动·Task B，仅供对照，不在此标注）：n=${vad.n} · 正${Math.round((d.positive||0)*100)}% 中${Math.round((d.neutral||0)*100)}% 负${Math.round((d.negative||0)*100)}% · 均值 v=${(vad.mean_vad && vad.mean_vad.v) ?? '—'}（1-9）</div>`
+    : '<div class="vad">评论观测：暂无</div>';
   const media = r.prev ? `<video controls preload="metadata" src="${esc(r.prev)}"></video>`
               : r.kf ? `<a href="${esc(r.src||r.kf)}" target="_blank"><img src="${esc(r.kf)}" loading="lazy"></a>`
               : '<div class="novideo">无预览</div>';
@@ -180,13 +195,13 @@ function card(r){
     ${media}
     <div class="tags">AI：P <b>${esc(r.p||'—')}</b> · R <b>${esc(r.r||'—')}</b> · 内容 <b>${esc(r.stance||'—')}</b> · conf ${esc(r.conf||'—')} · ${esc(r.dur||'')}s · ${st}</div>
     <div class="f">
-      <label>内容四分类（必选）</label>
+      <label>内容四分类（视频内容，必选）</label>
       <div class="stance" data-f="stance" data-id="${r.id}">
         ${STANCES.map(s=>`<label class="${stance===s?'sel':''}"><input type="radio" name="st_${r.id}" value="${s}" ${stance===s?'checked':''}>${ST_CN[s]}</label>`).join('')}
       </div>
       <div class="row2">
-        <div><label>强度 1-4</label><input type="number" min="1" max="4" value="${lab.intensity||''}" data-f="intensity" data-id="${r.id}" placeholder="1-4"></div>
-        <div><label>置信 0-1</label><input type="number" min="0" max="1" step="0.05" value="${lab.confidence||''}" data-f="confidence" data-id="${r.id}" placeholder="0.7"></div>
+        <div><label>内容强度 1-4（视频本身情绪强弱，1=平 4=极强）</label><input type="number" min="1" max="4" value="${lab.intensity||''}" data-f="intensity" data-id="${r.id}" placeholder="1-4"></div>
+        <div><label>标注置信 0-1（你对四分类判断的把握）</label><input type="number" min="0" max="1" step="0.05" value="${lab.confidence||''}" data-f="confidence" data-id="${r.id}" placeholder="0.7"></div>
       </div>
       <label>P 码（可多选；空=无合适码）</label>
       <div class="chips">${chips('p', r.id, pSel)}</div>
@@ -197,6 +212,7 @@ function card(r){
       <label>备注（可选）</label>
       <input type="text" data-f="notes" data-id="${r.id}" value="${esc(lab.notes||'')}" placeholder="存疑点 / 修正原因">
     </div>
+    ${vadLine}
     <div class="ai"><a href="${esc(r.src)}" target="_blank">平台原片</a></div>
   </div>`;
 }
