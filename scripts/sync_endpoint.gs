@@ -1,31 +1,62 @@
 /**
- * Gameclip-SNA 标注同步端点（Google Apps Script）
+ * Gameclip-SNA 标注同步端点（Google Apps Script，独立项目可直接用）
  *
- * 部署方法：
- *  1. 打开 https://script.google.com → 新建项目 → 粘贴本文件 → 保存
- *  2. 部署 → 新建部署 → 类型「Web 应用」
- *     执行身份：我（Me）
- *     访问权限：任何人（Anyone）
- *  3. 复制 Web 应用 URL（https://script.google.com/macros/s/.../exec）
- *  4. 发给标注员：打开标注页 → 底部「同步地址」粘贴一次（存浏览器），
- *     或直接发 https://banford74.github.io/Gameclip-SNA/?a=2&sync=<URL> 这样的链接
+ * 部署步骤（约 5 分钟）：
+ *  1. https://script.google.com → 左上「新建项目」→ 项目名随便（如 gameclip-sync）
+ *  2. 把本文件全部内容粘贴进去，替换默认的 Code.gs → Ctrl+S 保存
+ *  3. 右上「部署」→「新建部署」→ 齿轮选「Web 应用」
+ *       说明：gameclip-sync
+ *       执行身份：我（Me）
+ *       访问权限：任何人（Anyone）
+ *     →「部署」→ 首次会跳授权：选账号 →「高级」→「转至 xxx（不安全）」→ 允许
+ *  4. 复制「Web 应用」URL（https://script.google.com/macros/s/.../exec）
+ *     —— 这个 URL 就是标注页要填的「同步地址」
+ *  5. 用浏览器打开该 URL（GET）可看到 JSON：里面 spreadsheetUrl 就是数据表链接
  *
- * 标注页每次保存（防抖 1.2s）会把该标注员的全量标注 POST 过来（text/plain，no-cors）。
- * 本脚本写入「labels」工作表，按 (annotator, clip_id) 去重更新。
+ * 数据：自动创建 Google 表格《Gameclip labels》→ 工作表 labels，
+ *       按 (annotator, clip_id) 去重更新；表 ID 存在脚本属性里，重启也不丢。
  *
- * 进度汇总页读取方式：文件 → 共享 → 发布到网络 → 选「labels」工作表、格式 CSV → 复制链接，
- * 打开 https://banford74.github.io/Gameclip-SNA/progress.html?data=<CSV链接>，每 20 秒自动刷新。
+ * 注意：改了代码要「部署 → 管理部署 → 编辑 → 版本选新版本」才生效。
  */
+
+function getSheet_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('SHEET_ID');
+  var ss = null;
+  if (id) {
+    try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; }
+  }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Gameclip labels');
+    props.setProperty('SHEET_ID', ss.getId());
+  }
+  var sh = ss.getSheetByName('labels') || ss.insertSheet('labels');
+  return { ss: ss, sh: sh };
+}
+
+var HEAD = ['annotator', 'clip_id', 'stance', 'intensity', 'p_codes', 'r_codes',
+            'evidence', 'confidence', 'notes', 'annotated_at'];
+
+function doGet(e) {
+  var g = getSheet_();
+  return ContentService.createTextOutput(JSON.stringify({
+    ok: true,
+    message: 'gameclip sync endpoint is up',
+    spreadsheetUrl: g.ss.getUrl(),
+    rows: Math.max(0, g.sh.getLastRow() - 1)
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
-  var body = JSON.parse(e.postData.contents);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName('labels');
-  if (!sh) sh = ss.insertSheet('labels');
-  var HEAD = ['annotator', 'clip_id', 'stance', 'intensity', 'p_codes', 'r_codes',
-              'evidence', 'confidence', 'notes', 'annotated_at'];
+  var body = {};
+  try { body = JSON.parse(e.postData.contents); } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'bad json' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  var g = getSheet_();
+  var sh = g.sh;
   if (sh.getLastRow() === 0) sh.appendRow(HEAD);
 
-  // 现有 (annotator, clip_id) → 行号
   var last = sh.getLastRow();
   var existing = {};
   if (last > 1) {
@@ -39,6 +70,7 @@ function doPost(e) {
   var appends = [];
   for (var cid in labels) {
     var r = labels[cid] || {};
+    if (!r.stance) continue;
     var row = [annotator, cid, r.stance || '', r.intensity || '', r.p_codes || '',
                r.r_codes || '', r.evidence || '', r.confidence || '', r.notes || '',
                r.annotated_at || ''];
@@ -49,6 +81,8 @@ function doPost(e) {
   updates.forEach(function (u) { sh.getRange(u.row, 1, 1, HEAD.length).setValues([u.vals]); });
   if (appends.length) sh.getRange(sh.getLastRow() + 1, 1, appends.length, HEAD.length).setValues(appends);
 
-  return ContentService.createTextOutput(JSON.stringify({ ok: true, updated: updates.length, appended: appends.length }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({
+    ok: true, updated: updates.length, appended: appends.length,
+    spreadsheetUrl: g.ss.getUrl()
+  })).setMimeType(ContentService.MimeType.JSON);
 }
