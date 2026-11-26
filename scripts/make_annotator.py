@@ -143,10 +143,17 @@ a{color:var(--acc)}
   <span id="pginfo" class="hint"></span>
   <button id="next">下一页 »</button>
   <div class="progwrap"><div class="prog" title="标注进度"><i id="prog"></i></div><span id="progtext" class="hint"></span></div>
-  <button id="exp" class="primary">导出我的标注 CSV</button>
-  <button id="expAll" class="primary">导出全部已标注</button>
+  <button id="exp" class="primary">💾 存档并回传（一键）</button>
+  <button id="expAll">导出全部已标注</button>
   <label class="imp">导入 CSV<input id="imp" type="file" accept=".csv" style="display:none"></label>
   <button id="clear" title="清空本浏览器的标注">重置</button>
+  <a class="hint" href="progress.html" target="_blank" style="margin-left:auto">📊 进度汇总页</a>
+</div>
+<div class="bar" style="border-bottom:none;padding-top:0">
+  <span class="hint">可选：共享同步地址（Apps Script 等），填一次存本浏览器；存标注时自动 POST 一份</span>
+  <input id="syncUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:240px">
+  <span id="syncState" class="hint"></span>
+  <span id="lastSave" class="hint"></span>
 </div>
 <div class="legend">
   <b>本页标注对象 = 视频内容（Task A）</b>：内容四分类 + 强度 + P/R 码 + 证据。
@@ -176,11 +183,15 @@ a{color:var(--acc)}
 const DATA = __DATA__;
 const LS = 'gameclip_labels_v1';
 const ANN_KEY = 'gameclip_annotator';
+const SYNC_KEY = 'gameclip_sync_url';
 const STANCES = ['positive','negative','neutral','mixed'];
 const ST_CN = {positive:'正向', negative:'负向', neutral:'中性', mixed:'混合'};
 let labels = {};
 try { labels = JSON.parse(localStorage.getItem(LS) || '{}'); } catch(e) { labels = {}; }
 let page = 0;
+let SYNC = (new URLSearchParams(location.search).get('sync') || localStorage.getItem(SYNC_KEY) || '').trim();
+if (new URLSearchParams(location.search).get('sync')) localStorage.setItem(SYNC_KEY, SYNC);
+let syncTimer = null;
 
 function urlAnn(){
   const m = location.search.match(/[?&]a=(\d+)/);
@@ -194,9 +205,53 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const splitCodes = s => String(s||'').replace(/、/g,';').split(';').map(x=>x.trim()).filter(Boolean);
 
-function save(){ localStorage.setItem(LS, JSON.stringify(labels)); renderTop(); }
+function save(){
+  localStorage.setItem(LS, JSON.stringify(labels));
+  renderTop(); scheduleSync();
+  const ls = document.getElementById('lastSave');
+  if (ls) ls.textContent = '上次存档 ' + new Date().toLocaleTimeString();
+}
 function get(id){ return labels[id]; }
 function scope(){ return ANNOTATOR === 'all' ? DATA.rows : DATA.rows.filter(r => r.a === ANNOTATOR); }
+
+const ROWMAP = new Map(DATA.rows.map(r => [r.id, r]));
+function myLabels(){
+  const out = {};
+  for (const [cid, rec] of Object.entries(labels)) {
+    const a = String(rec.annotator || (ROWMAP.get(cid) || {}).a || '');
+    if (ANNOTATOR === 'all' || a === String(ANNOTATOR)) out[cid] = rec;
+  }
+  return out;
+}
+function scheduleSync(){ if (!SYNC) return; clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 1200); }
+async function saveNow(){
+  save();                                   // 先落本地
+  const st = document.getElementById('syncState');
+  if (SYNC) {
+    clearTimeout(syncTimer);
+    await pushSync();                       // 一键回传
+    if (st) st.textContent += ' ✓ 已回传';
+  } else {
+    exportCSV(false);                       // 未配置同步：直接导出 CSV
+    const d = document.getElementById('drop') || document.getElementById('lastSave');
+    if (st) st.textContent = '未配置同步地址，已导出 CSV（发回给负责人即可）';
+    else if (d) d.textContent = '已导出 CSV，请发给负责人';
+  }
+}
+async function pushSync(){
+  const st = document.getElementById('syncState');
+  if (!SYNC) return;
+  const mine = myLabels();
+  const payload = {annotator: ANNOTATOR === 'all' ? 'all' : ANNOTATOR, saved_at: new Date().toISOString(),
+                   count: Object.keys(mine).length, labels: mine};
+  try {
+    await fetch(SYNC, {method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
+    if (st) { st.textContent = '已同步 ' + new Date().toLocaleTimeString() + '（' + Object.keys(mine).length + ' 条）'; st.className = 'hint'; }
+  } catch (e) {
+    if (st) { st.textContent = '同步失败：' + e.message; st.className = 'hint bad'; }
+  }
+}
 
 function renderTop(){
   const rows = scope();
@@ -396,10 +451,16 @@ function main(){
     if (n >= 1 && n <= pages) { page = n - 1; render(); }
     e.target.value = '';
   });
-  $('#exp').addEventListener('click', () => exportCSV(false));
+  $('#exp').addEventListener('click', () => saveNow());
   $('#expAll').addEventListener('click', () => exportCSV(true));
   $('#imp').addEventListener('change', e => { if (e.target.files[0]) importCSV(e.target.files[0]); e.target.value = ''; });
   $('#clear').addEventListener('click', () => { if (confirm('清空本浏览器所有标注？建议先导出。')) { labels = {}; save(); render(); } });
+  $('#syncUrl').value = SYNC;
+  $('#syncUrl').addEventListener('change', () => {
+    SYNC = $('#syncUrl').value.trim();
+    localStorage.setItem(SYNC_KEY, SYNC);
+    if (SYNC) pushSync();
+  });
   renderTop(); render();
 }
 main();
