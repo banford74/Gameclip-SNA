@@ -1,0 +1,4 @@
+out/
+out_live/
+__pycache__/
+*.pyc

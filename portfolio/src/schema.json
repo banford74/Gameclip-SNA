@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GameClipRecord",
+  "description": "Task A structured record: content stance (4-class) + P/R codebook tags for one short game video.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["one_liner", "content_sentiment", "p_codes", "r_codes_hit", "confidence"],
+  "properties": {
+    "one_liner": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 220,
+      "description": "One sentence: what this clip is and what makes it work."
+    },
+    "content_sentiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "intensity", "evidence"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "enum": ["positive", "negative", "neutral", "mixed"],
+          "description": "Content stance (4-class). mixed = positive and negative structure co-present/reversed within the clip; intensity alone is NOT mixed."
+        },
+        "intensity": {"type": "integer", "minimum": 1, "maximum": 4},
+        "evidence": {
+          "type": "string",
+          "minLength": 4,
+          "description": "Must point to concrete frames/seconds (e.g. 'f_04 第一滴血, f_16 二连击破')."
+        }
+      }
+    },
+    "p_codes": {
+      "type": "array",
+      "description": "Plot-layer codes (multi-select). Each entry must carry frame/second evidence. May be empty ONLY if no code in the codebook fits.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "evidence"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^P[0-9]{3}$"},
+          "evidence": {"type": "string", "minLength": 2}
+        }
+      }
+    },
+    "r_codes_hit": {
+      "type": "array",
+      "description": "Visual-feature codes (R1-R9) that the clip demonstrably shows.",
+      "items": {"type": "string", "pattern": "^R[0-9]{3}$"},
+      "uniqueItems": true
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}
