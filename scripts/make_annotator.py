@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""生成在线标注工作台（docs/index.html）：
+"""生成在线标注工作台（docs/index.html）——支持 4 人分工。
 
-- 从 data/clips.csv + portfolio/src/codebook.json 生成单文件页面（数据内嵌，无需后端）
-- 人工逐条点击标注：内容四分类 + 强度 + P 码(20) + R 码(96) + 证据 + 置信 + 备注
-- 标注自动存浏览器 localStorage（刷新不丢），可导出 human_labels.csv / 再导入续标
-- 顶部：进度、筛选（游戏/未标/已标/低置信/无P码）、分页
-用法: python Gameclip-SNA/scripts/make_annotator.py
+分配策略（确定性，生成时算好并写进页面）：
+  * 按 (游戏, 难度) 分层：难度 = 低置信(<0.6) / 无 P 码 / 待分析 记为 hard，其余 easy
+  * 层内按 clip_id 稳定排序，逐条分给「当前条数最少」的标注员（4 人，约 551/550/550/550）
+  * 每人拿到相近的游戏构成与相近的难易比例，且分工互不重叠
+
+页面功能：
+  * 标注员选择（1-4 / 全部），也可用 ?a=2 直接进入；选择记忆在 localStorage
+  * 只显示本人分到的条目；进度条只算本人（另显示全局已标注）
+  * 游戏/状态筛选、分页 + 跳页；四分类 + 强度 + P/R 码 + 证据 + 置信 + 备注
+  * 自动存 localStorage；导出 CSV（仅本人已标注 / 全部已标注，含 annotator 列）；导入续标
+用法: python scripts/make_annotator.py
 """
 import csv
 import json
@@ -17,6 +23,7 @@ WS = ROOT.parent                                        # workspace
 CSV = ROOT / "data" / "clips.csv"
 CODEBOOK = WS / "portfolio" / "src" / "codebook.json"
 OUT = ROOT / "docs" / "index.html"
+N_ANNOTATORS = 4
 
 
 def load_rows():
@@ -34,17 +41,44 @@ def load_rows():
     return rows
 
 
+def is_hard(r: dict) -> bool:
+    try:
+        conf = float(r.get("conf") or 0)
+    except ValueError:
+        conf = 0.0
+    return bool(r.get("status") == "pending_analysis" or not r.get("p") or conf < 0.6)
+
+
+def assign(rows: list[dict], n: int = N_ANNOTATORS):
+    """按 (游戏, 难度) 分层 + 最少条数优先，做确定性分工。"""
+    strata: dict = {}
+    for r in rows:
+        strata.setdefault((r["game"], is_hard(r)), []).append(r)
+    counts = {i: 0 for i in range(1, n + 1)}
+    out = []
+    for key in sorted(strata):
+        items = sorted(strata[key], key=lambda r: r["id"])
+        for r in items:
+            a = min(counts, key=lambda k: (counts[k], k))
+            rec = dict(r)
+            rec["a"] = a
+            counts[a] += 1
+            out.append(rec)
+    return out, counts
+
+
 def main():
     rows = load_rows()
+    rows, counts = assign(rows)
+    rows.sort(key=lambda r: (r["a"], r["game"], r["id"]))
     cb = json.loads(CODEBOOK.read_text(encoding="utf-8"))
     codes = {"p": {k: v["name"] for k, v in cb["p"].items()},
              "r": {k: v["name"] for k, v in cb["r"].items()}}
-    data = {"codes": codes, "rows": rows}
+    data = {"codes": codes, "rows": rows, "n": N_ANNOTATORS, "counts": counts}
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-
-    html = HTML_TMPL.replace("__DATA__", payload)
-    OUT.write_text(html, encoding="utf-8")
+    OUT.write_text(HTML_TMPL.replace("__DATA__", payload), encoding="utf-8")
     print(f"annotator written: {OUT} rows={len(rows)} p={len(codes['p'])} r={len(codes['r'])}")
+    print("assignment:", {k: v for k, v in sorted(counts.items())})
 
 
 HTML_TMPL = r"""<!doctype html>
@@ -59,7 +93,8 @@ h1{font-size:17px;margin:0 0 8px}
 .bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .bar select,.bar input,.bar button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px}
 .bar button{cursor:pointer}.bar button.primary{border-color:var(--acc);color:var(--acc)}
-.prog{height:6px;background:#22262f;border-radius:3px;flex:1 1 180px;overflow:hidden}
+.progwrap{display:flex;align-items:center;gap:6px;flex:1 1 220px}
+.prog{height:6px;background:#22262f;border-radius:3px;flex:1;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--ok);width:0}
 .hint{font-size:12px;color:var(--dim)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;margin-top:12px}
@@ -90,14 +125,34 @@ textarea,input[type=text],input[type=number]{background:#0d1014;color:var(--fg);
 .legend b{color:#c9d1d9}
 .vad{font-size:11px;color:#8b949e;border-top:1px dashed var(--line);padding-top:4px}
 .vad b{color:#b8c0cc}
+.ann{font-size:11px;color:var(--warn)}
 .foot{margin-top:18px;color:var(--dim);font-size:11px;line-height:1.6}
 a{color:var(--acc)}
 </style></head><body>
-<h1>Gameclip-SNA · 人工标注工作台</h1>
+<h1>Gameclip-SNA · 人工标注工作台 <span id="who" class="ann"></span></h1>
+<div class="bar">
+  <select id="fAnn"></select>
+  <select id="fGame"></select>
+  <select id="fStatus">
+    <option value="all">全部</option><option value="pending">待标注</option><option value="done">已标注</option>
+    <option value="lowconf">低置信 &lt;0.6</option><option value="nop">无 P 码</option><option value="review">待复核</option>
+  </select>
+  <select id="fPageSize"><option>24</option><option selected>48</option><option>96</option></select>
+  <button id="prev">« 上一页</button>
+  <input id="jump" type="number" min="1" placeholder="跳页" style="width:64px">
+  <span id="pginfo" class="hint"></span>
+  <button id="next">下一页 »</button>
+  <div class="progwrap"><div class="prog" title="标注进度"><i id="prog"></i></div><span id="progtext" class="hint"></span></div>
+  <button id="exp" class="primary">导出我的标注 CSV</button>
+  <button id="expAll" class="primary">导出全部已标注</button>
+  <label class="imp">导入 CSV<input id="imp" type="file" accept=".csv" style="display:none"></label>
+  <button id="clear" title="清空本浏览器的标注">重置</button>
+</div>
 <div class="legend">
   <b>本页标注对象 = 视频内容（Task A）</b>：内容四分类 + 强度 + P/R 码 + 证据。
   「强度」指视频本身的情绪强度（1-4），「置信」是你对这次四分类判断的把握（0-1）。
   评论情绪（Task B）<b>不在本页标注</b>——它是自动算的 VAD（1-9 连续分），只读展示在每张卡片底部，仅供对照。
+  <div style="margin-top:4px">分工：4 人各负责约 550 条（按游戏×难度分层确定性分配，互不重叠）；每人用 <code>?a=2</code> 这样的链接进入自己的视图。</div>
   <details style="margin-top:6px"><summary style="cursor:pointer;color:#58a6ff">四分类判定指引（mixed vs neutral，点开）</summary>
   <div style="margin-top:6px">
   <b>① 先问「这条片子的设计意图想让观众产生什么情绪」</b>，不是画面里发生了什么。列出情绪拍点：正向＝高光/夸奖/治愈/燃/期待；负向＝失败/吐槽/压抑/恐怖/遗憾/尴尬。<br>
@@ -111,35 +166,29 @@ a{color:var(--acc)}
   <b>别用 mixed 当"拿不准"的垃圾桶</b>：当前 AI 预标里 mixed 占 43.5%（positive 48.7 / negative 4.2 / neutral 3.2），大概率高估——人工标注时请反向校正。
   </div></details>
 </div>
-<div class="bar">
-  <select id="fGame"></select>
-  <select id="fStatus">
-    <option value="all">全部</option><option value="pending">待标注</option><option value="done">已标注</option>
-    <option value="lowconf">低置信 &lt;0.6</option><option value="nop">无 P 码</option><option value="review">待复核</option>
-  </select>
-  <select id="fPageSize"><option>24</option><option selected>48</option><option>96</option></select>
-  <button id="prev">« 上一页</button><span id="pginfo" class="hint"></span><button id="next">下一页 »</button>
-  <div class="prog" title="标注进度"><i id="prog"></i></div>
-  <span id="progtext" class="hint"></span>
-  <button id="exp" class="primary">导出标注 CSV</button>
-  <button id="expAll" class="primary">导出全部（含未改）</button>
-  <label class="imp">导入 CSV<input id="imp" type="file" accept=".csv" style="display:none"></label>
-  <button id="clear" title="清空本浏览器的标注">重置</button>
-</div>
 <div id="grid" class="grid"></div>
 <div class="foot">
-标注保存位置：本浏览器 localStorage（刷新不丢）。点「导出标注 CSV」得到 <code>human_labels_*.csv</code>，
+标注保存位置：本浏览器 localStorage（刷新不丢）。点「导出我的标注 CSV」得到 <code>human_labels_*.csv</code>（含 annotator 列），
 然后运行 <code>python Gameclip-SNA/scripts/merge_labels.py human_labels_*.csv</code> 把结果写回
 <code>data/clips.csv</code> 的 human_correction 列并推送。P/R 码表与 AI 预标来自自动流水线；人工只需确认/修正。
 </div>
 <script>
 const DATA = __DATA__;
 const LS = 'gameclip_labels_v1';
+const ANN_KEY = 'gameclip_annotator';
 const STANCES = ['positive','negative','neutral','mixed'];
 const ST_CN = {positive:'正向', negative:'负向', neutral:'中性', mixed:'混合'};
 let labels = {};
 try { labels = JSON.parse(localStorage.getItem(LS) || '{}'); } catch(e) { labels = {}; }
 let page = 0;
+
+function urlAnn(){
+  const m = location.search.match(/[?&]a=(\d+)/);
+  if (m) return parseInt(m[1], 10);
+  const v = parseInt(localStorage.getItem(ANN_KEY) || '0', 10);
+  return (v >= 1 && v <= DATA.n) ? v : 1;
+}
+let ANNOTATOR = urlAnn();
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -147,23 +196,29 @@ const splitCodes = s => String(s||'').replace(/、/g,';').split(';').map(x=>x.tr
 
 function save(){ localStorage.setItem(LS, JSON.stringify(labels)); renderTop(); }
 function get(id){ return labels[id]; }
+function scope(){ return ANNOTATOR === 'all' ? DATA.rows : DATA.rows.filter(r => r.a === ANNOTATOR); }
 
 function renderTop(){
-  let done = 0; const total = DATA.rows.length;
-  DATA.rows.forEach(r => { if (get(r.id)) done++; });
-  $('#prog').style.width = (100*done/total).toFixed(1) + '%';
-  $('#progtext').textContent = '已标注 ' + done + ' / ' + total;
+  const rows = scope();
+  let done = 0; rows.forEach(r => { if (get(r.id)) done++; });
+  $('#prog').style.width = (100*done/Math.max(1,rows.length)).toFixed(1) + '%';
+  let gdone = 0; DATA.rows.forEach(r => { if (get(r.id)) gdone++; });
+  $('#progtext').textContent = `我 ${done}/${rows.length} · 全局 ${gdone}/${DATA.rows.length}`;
+  $('#who').textContent = ANNOTATOR === 'all' ? '（全部标注员视图）' : `（标注员 ${ANNOTATOR}）`;
+  const sel = $('#fAnn'); if (sel.value !== String(ANNOTATOR)) sel.value = String(ANNOTATOR);
 }
 
 function options(){
   const games = [...new Set(DATA.rows.map(r=>r.game))].sort();
-  const sel = $('#fGame');
-  sel.innerHTML = '<option value="all">全部游戏</option>' + games.map(g=>`<option>${esc(g)}</option>`).join('');
+  $('#fGame').innerHTML = '<option value="all">全部游戏</option>' + games.map(g=>`<option>${esc(g)}</option>`).join('');
+  $('#fAnn').innerHTML = Array.from({length:DATA.n}, (_,i)=>`<option value="${i+1}">标注员 ${i+1}（${DATA.counts[i+1]||0} 条）</option>`).join('') + '<option value="all">全部</option>';
+  $('#fAnn').value = String(ANNOTATOR);
 }
 
 function filtered(){
+  const rows = scope();
   const g = $('#fGame').value, st = $('#fStatus').value;
-  return DATA.rows.filter(r => {
+  return rows.filter(r => {
     if (g !== 'all' && r.game !== g) return false;
     const lab = get(r.id);
     if (st === 'pending' && lab) return false;
@@ -230,22 +285,23 @@ function card(r){
 }
 
 function collect(id){
-  const card = document.querySelector(`[data-cid="${id}"]`);
-  if (!card) return;
+  const cardEl = document.querySelector(`[data-cid="${id}"]`);
+  if (!cardEl) return;
   const rec = get(id) || {};
-  const st = card.querySelector(`input[name="st_${id}"]:checked`);
+  const st = cardEl.querySelector(`input[name="st_${id}"]:checked`);
   if (st) rec.stance = st.value;
-  card.querySelectorAll('[data-f]').forEach(el => {
+  cardEl.querySelectorAll('[data-f]').forEach(el => {
     const f = el.dataset.f; if (f === 'stance') return;
-    if (el.type === 'checkbox' && el.dataset.f !== 'r_codes') {
+    if (el.type === 'checkbox' && f === 'p') {
       const set = new Set(rec.p_codes ? splitCodes(rec.p_codes) : []);
       if (el.checked) set.add(el.value); else set.delete(el.value);
-      if (el.dataset.f === 'p') rec.p_codes = [...set].join(';');
+      rec.p_codes = [...set].join(';');
       return;
     }
-    if (el.dataset.f === 'r_codes' || el.dataset.f === 'intensity' || el.dataset.f === 'confidence' || el.dataset.f === 'evidence' || el.dataset.f === 'notes') rec[el.dataset.f] = el.value;
+    if (['r_codes','intensity','confidence','evidence','notes'].includes(f)) rec[f] = el.value;
   });
-  if (!rec.stance) return;            // 四分类必选前不落库
+  if (!rec.stance) return;
+  rec.annotator = ANNOTATOR === 'all' ? (rec.annotator || '') : ANNOTATOR;
   rec.annotated_at = new Date().toISOString();
   labels[id] = rec; save();
 }
@@ -259,15 +315,9 @@ function render(){
   const slice = list.slice(page*ps, (page+1)*ps);
   $('#grid').innerHTML = slice.map(card).join('') || '<p class="hint">没有符合条件的条目。</p>';
   $('#pginfo').textContent = `第 ${page+1}/${pages} 页 · 共 ${list.length} 条`;
-  bindGrid();
-}
-
-function bindGrid(){
   document.querySelectorAll('.card').forEach(card => {
     const id = card.dataset.cid;
-    card.querySelectorAll('input,textarea').forEach(el => {
-      el.addEventListener('change', () => { collect(id); });
-    });
+    card.querySelectorAll('input,textarea').forEach(el => el.addEventListener('change', () => collect(id)));
     card.querySelectorAll('.stance label').forEach(l => l.addEventListener('click', () => {
       card.querySelectorAll('.stance label').forEach(x=>x.classList.remove('sel'));
       l.classList.add('sel');
@@ -277,17 +327,16 @@ function bindGrid(){
 
 function csvEscape(v){ v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
 function exportCSV(all){
-  const list = all ? DATA.rows : DATA.rows.filter(r => get(r.id));
-  const head = ['clip_id','stance','intensity','p_codes','r_codes','evidence','confidence','notes','annotated_at'];
+  const list = all ? DATA.rows.filter(r => get(r.id)) : scope().filter(r => get(r.id));
+  const head = ['clip_id','annotator','stance','intensity','p_codes','r_codes','evidence','confidence','notes','annotated_at'];
   const lines = [head.join(',')];
   list.forEach(r => {
-    const l = get(r.id) || (all ? {stance:'', intensity:'', p_codes:'', r_codes:'', evidence:'', confidence:'', notes:''} : null);
-    if (!l) return;
-    lines.push([r.id, l.stance||'', l.intensity||'', l.p_codes||'', l.r_codes||'', l.evidence||'', l.confidence||'', l.notes||'', l.annotated_at||''].map(csvEscape).join(','));
+    const l = get(r.id); if (!l) return;
+    lines.push([r.id, l.annotator ?? r.a ?? '', l.stance||'', l.intensity||'', l.p_codes||'', l.r_codes||'', l.evidence||'', l.confidence||'', l.notes||'', l.annotated_at||''].map(csvEscape).join(','));
   });
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = (all ? 'human_labels_all_' : 'human_labels_') + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = (all ? 'human_labels_all_' : 'human_labels_a' + ANNOTATOR + '_') + new Date().toISOString().slice(0,10) + '.csv';
   a.click(); URL.revokeObjectURL(a.href);
 }
 
@@ -312,13 +361,13 @@ function importCSV(file){
     if (!rows.length) return;
     const head = rows[0].map(x => x.trim());
     const idx = n => head.indexOf(n);
-    const map = {stance:'stance', intensity:'intensity', p_codes:'p_codes', r_codes:'r_codes', evidence:'evidence', confidence:'confidence', notes:'notes', annotated_at:'annotated_at'};
+    const fields = ['annotator','stance','intensity','p_codes','r_codes','evidence','confidence','notes','annotated_at'];
     let n = 0;
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i]; const cid = r[idx('clip_id')];
       if (!cid) continue;
       const rec = {};
-      for (const [k, col] of Object.entries(map)) { const j = idx(col); if (j >= 0) rec[k] = r[j]; }
+      for (const k of fields) { const j = idx(k); if (j >= 0) rec[k] = r[j]; }
       if (rec.stance) { labels[cid.trim()] = rec; n++; }
     }
     save(); render();
@@ -329,11 +378,24 @@ function importCSV(file){
 
 function main(){
   options();
+  $('#fAnn').addEventListener('change', () => {
+    const v = $('#fAnn').value;
+    ANNOTATOR = v === 'all' ? 'all' : parseInt(v, 10);
+    localStorage.setItem(ANN_KEY, ANNOTATOR === 'all' ? '' : String(ANNOTATOR));
+    page = 0; renderTop(); render();
+  });
   $('#fGame').addEventListener('change', () => { page = 0; render(); });
   $('#fStatus').addEventListener('change', () => { page = 0; render(); });
   $('#fPageSize').addEventListener('change', () => { page = 0; render(); });
   $('#prev').addEventListener('click', () => { page--; render(); });
   $('#next').addEventListener('click', () => { page++; render(); });
+  $('#jump').addEventListener('change', e => {
+    const n = parseInt(e.target.value, 10);
+    const ps = parseInt($('#fPageSize').value, 10);
+    const pages = Math.max(1, Math.ceil(filtered().length / ps));
+    if (n >= 1 && n <= pages) { page = n - 1; render(); }
+    e.target.value = '';
+  });
   $('#exp').addEventListener('click', () => exportCSV(false));
   $('#expAll').addEventListener('click', () => exportCSV(true));
   $('#imp').addEventListener('change', e => { if (e.target.files[0]) importCSV(e.target.files[0]); e.target.value = ''; });

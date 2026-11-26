@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]          # Gameclip-SNA
 DEFAULT_CLIPS = ROOT / "data" / "clips.csv"
-KEYS = ["stance", "intensity", "p_codes", "r_codes", "evidence", "confidence", "notes", "annotated_at"]
+KEYS = ["annotator", "stance", "intensity", "p_codes", "r_codes", "evidence", "confidence", "notes", "annotated_at"]
 
 
 def main():
