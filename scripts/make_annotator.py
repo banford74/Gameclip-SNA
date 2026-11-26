@@ -98,6 +98,18 @@ a{color:var(--acc)}
   <b>本页标注对象 = 视频内容（Task A）</b>：内容四分类 + 强度 + P/R 码 + 证据。
   「强度」指视频本身的情绪强度（1-4），「置信」是你对这次四分类判断的把握（0-1）。
   评论情绪（Task B）<b>不在本页标注</b>——它是自动算的 VAD（1-9 连续分），只读展示在每张卡片底部，仅供对照。
+  <details style="margin-top:6px"><summary style="cursor:pointer;color:#58a6ff">四分类判定指引（mixed vs neutral，点开）</summary>
+  <div style="margin-top:6px">
+  <b>① 先问「这条片子的设计意图想让观众产生什么情绪」</b>，不是画面里发生了什么。列出情绪拍点：正向＝高光/夸奖/治愈/燃/期待；负向＝失败/吐槽/压抑/恐怖/遗憾/尴尬。<br>
+  <b>② 只有单一极性有"有分量的拍点"</b>（能指到具体秒数、被设计出来）→ positive / negative。一个情绪拍点都没有（信息型：攻略、机制推演、纯外观展示）→ <b>neutral</b>。<br>
+  <b>③ 两个极性都有有分量的拍点，且形成并置/反转结构</b>（先抑后扬、先扬后抑、反差打脸、自嘲+高燃、社死名场面）→ <b>mixed</b>。<br>
+  <b>mixed 与 neutral 的区别</b>：neutral 是「没有情绪拍点」（信息型平铺）；mixed 是「有两个对立的情绪拍点」（情绪双峰）。所以：<br>
+  · 「搞笑翻车」≠ neutral（有笑点=情绪设计）→ mixed（惨+笑）或 positive（笑点为主）；<br>
+  · 「攻略+燃 BGM」可以是 neutral（信息为主、无情绪拍点），也可以是 positive（燃是设计核心）；<br>
+  · 纯色调/画面冷暖对比 ≠ mixed（视觉对比不是情绪反转）；「情绪很强烈」≠ mixed（强度 4 也可以是 positive）；<br>
+  · 标题吐槽但正片高燃：以正片是否有负向拍点为准，拿不准就选一个 + 置信 0.5-0.6 + 备注写清两段证据。<br>
+  <b>别用 mixed 当"拿不准"的垃圾桶</b>：当前 AI 预标里 mixed 占 43.5%（positive 48.7 / negative 4.2 / neutral 3.2），大概率高估——人工标注时请反向校正。
+  </div></details>
 </div>
 <div class="bar">
   <select id="fGame"></select>
