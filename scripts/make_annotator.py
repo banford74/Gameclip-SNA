@@ -70,16 +70,46 @@ def assign(rows: list[dict], n: int = N_ANNOTATORS):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ids", default="", help="只保留这些 clip_id（每行一个，或含 clip_id 列的 CSV）")
+    ap.add_argument("--blind", action="store_true", help="盲标：从页面数据里抹掉 AI 的 stance/P/R/conf")
+    ap.add_argument("--shared", action="store_true", help="重叠轮：每个标注员都看到全部条目（a=0 共享池）")
+    ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--banner", default="", help="页面顶部提示语")
+    args = ap.parse_args()
+
     rows = load_rows()
-    rows, counts = assign(rows)
+    if args.ids:
+        keep = set()
+        for line in Path(args.ids).read_text(encoding="utf-8-sig").splitlines():
+            for tok in line.replace(",", " ").split():
+                if tok.strip().isdigit():
+                    keep.add(tok.strip())
+        rows = [r for r in rows if r["id"] in keep]
+        if not rows:
+            raise SystemExit(f"--ids 里没有匹配到任何 clip_id: {args.ids}")
+    if args.shared:
+        for r in rows:
+            r["a"] = 0
+        counts = {0: len(rows)}
+    else:
+        rows, counts = assign(rows)
+    if args.blind:
+        for r in rows:
+            for k in ("p", "r", "conf", "stance"):
+                r[k] = ""
     rows.sort(key=lambda r: (r["a"], r["game"], r["id"]))
     cb = json.loads(CODEBOOK.read_text(encoding="utf-8"))
     codes = {"p": {k: v["name"] for k, v in cb["p"].items()},
              "r": {k: v["name"] for k, v in cb["r"].items()}}
-    data = {"codes": codes, "rows": rows, "n": N_ANNOTATORS, "counts": counts, "defaultSync": DEFAULT_SYNC}
+    data = {"codes": codes, "rows": rows, "n": N_ANNOTATORS, "counts": counts,
+            "defaultSync": DEFAULT_SYNC, "banner": args.banner, "blind": bool(args.blind)}
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    OUT.write_text(HTML_TMPL.replace("__DATA__", payload), encoding="utf-8")
-    print(f"annotator written: {OUT} rows={len(rows)} p={len(codes['p'])} r={len(codes['r'])}")
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(HTML_TMPL.replace("__DATA__", payload), encoding="utf-8")
+    print(f"annotator written: {out} rows={len(rows)} blind={args.blind} shared={args.shared} p={len(codes['p'])} r={len(codes['r'])}")
     print("assignment:", {k: v for k, v in sorted(counts.items())})
 
 
@@ -132,6 +162,7 @@ textarea,input[type=text],input[type=number]{background:#0d1014;color:var(--fg);
 a{color:var(--acc)}
 </style></head><body>
 <h1>Gameclip-SNA · 人工标注工作台 <span id="who" class="ann"></span></h1>
+<div id="banner" class="legend" style="display:none;border-color:#8a6d3b;background:#2a2214"></div>
 <div class="bar">
   <select id="fAnn"></select>
   <select id="fGame"></select>
@@ -214,7 +245,7 @@ function save(){
   if (ls) ls.textContent = '上次存档 ' + new Date().toLocaleTimeString();
 }
 function get(id){ return labels[id]; }
-function scope(){ return ANNOTATOR === 'all' ? DATA.rows : DATA.rows.filter(r => r.a === ANNOTATOR); }
+function scope(){ return ANNOTATOR === 'all' ? DATA.rows : DATA.rows.filter(r => r.a === ANNOTATOR || r.a === 0); }
 
 const ROWMAP = new Map(DATA.rows.map(r => [r.id, r]));
 function myLabels(){
@@ -271,6 +302,7 @@ function renderTop(){
   let gdone = 0; DATA.rows.forEach(r => { if (get(r.id)) gdone++; });
   $('#progtext').textContent = `我 ${done}/${rows.length} · 全局 ${gdone}/${DATA.rows.length}`;
   $('#who').textContent = ANNOTATOR === 'all' ? '（全部标注员视图）' : `（标注员 ${ANNOTATOR}）`;
+  if (DATA.banner) { const b = document.getElementById('banner'); if (b) { b.innerHTML = esc(DATA.banner); b.style.display = 'block'; } }
   const sel = $('#fAnn'); if (sel.value !== String(ANNOTATOR)) sel.value = String(ANNOTATOR);
 }
 
@@ -326,7 +358,7 @@ function card(r){
     <div class="meta"><span><b>${esc(r.game)}</b> · ${esc(r.fmt||'—')} · <code>${esc(r.id)}</code></span>
       <span class="badge ${done?'b-done':'b-pend'}">${done?'已标注':'待标注'}</span></div>
     ${media}
-    <div class="tags">AI：P <b>${esc(r.p||'—')}</b> · R <b>${esc(r.r||'—')}</b> · 内容 <b>${esc(r.stance||'—')}</b> · conf ${esc(r.conf||'—')} · ${esc(r.dur||'')}s · ${st}</div>
+    <div class="tags">${DATA.blind ? '' : `AI：P <b>${esc(r.p||'—')}</b> · R <b>${esc(r.r||'—')}</b> · 内容 <b>${esc(r.stance||'—')}</b> · conf ${esc(r.conf||'—')} · `}${esc(r.dur||'')}s · ${st}</div>
     <div class="f">
       <label>内容四分类（视频内容，必选）</label>
       <div class="stance" data-f="stance" data-id="${r.id}">

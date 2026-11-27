@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gameclip-SNA · 人工标注工作台</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#242936;--fg:#e6e6e6;--dim:#8b949e;--acc:#58a6ff;--ok:#7ee787;--warn:#d29922;--bad:#f85149}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:16px}
+h1{font-size:17px;margin:0 0 8px}
+.bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar select,.bar input,.bar button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px}
+.bar button{cursor:pointer}.bar button.primary{border-color:var(--acc);color:var(--acc)}
+.progwrap{display:flex;align-items:center;gap:6px;flex:1 1 220px}
+.prog{height:6px;background:#22262f;border-radius:3px;flex:1;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);width:0}
+.hint{font-size:12px;color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.card.done{border-color:#2b5f3b}
+.meta{font-size:12px;color:#c9d1d9;display:flex;justify-content:space-between;gap:6px}
+.meta code{color:var(--dim)}
+.tags{font-size:11px;color:var(--dim);line-height:1.5}
+.tags b{color:#c9d1d9}
+video,img{width:100%;border-radius:6px;background:#000;display:block;max-height:200px;object-fit:contain}
+.ai{font-size:11px;color:var(--dim);border-top:1px dashed var(--line);padding-top:4px}
+.f{margin-top:4px;display:flex;flex-direction:column;gap:4px}
+.f label{font-size:11px;color:var(--dim)}
+.stance{display:flex;gap:6px;flex-wrap:wrap}
+.stance label{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer}
+.stance input{accent-color:var(--acc)}
+.stance label.sel{border-color:var(--acc);background:#1b2a3d}
+.chips{display:flex;flex-wrap:wrap;gap:4px;max-height:96px;overflow:auto}
+.chips label{display:flex;align-items:center;gap:3px;font-size:11px;color:#b8c0cc;border:1px solid var(--line);border-radius:5px;padding:2px 5px;cursor:pointer}
+.chips label.on{border-color:var(--ok);color:var(--ok)}
+.chips input{display:none}
+textarea,input[type=text],input[type=number]{background:#0d1014;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:4px 6px;font-size:12px;width:100%}
+.badge{font-size:10px;border-radius:4px;padding:1px 5px}
+.b-pend{background:#30363d;color:#8b949e}.b-done{background:#1f6f43;color:#d7ffe4}
+.row2{display:flex;gap:6px}.row2>*{flex:1}
+.imp{color:var(--acc);text-decoration:underline;cursor:pointer;font-size:12px}
+.legend{font-size:12px;color:var(--dim);background:#12151b;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0 4px;line-height:1.7}
+.legend b{color:#c9d1d9}
+.vad{font-size:11px;color:#8b949e;border-top:1px dashed var(--line);padding-top:4px}
+.vad b{color:#b8c0cc}
+.ann{font-size:11px;color:var(--warn)}
+.foot{margin-top:18px;color:var(--dim);font-size:11px;line-height:1.6}
+a{color:var(--acc)}
+</style></head><body>
+<h1>Gameclip-SNA · 人工标注工作台 <span id="who" class="ann"></span></h1>
+<div id="banner" class="legend" style="display:none;border-color:#8a6d3b;background:#2a2214"></div>
+<div class="bar">
+  <select id="fAnn"></select>
+  <select id="fGame"></select>
+  <select id="fStatus">
+    <option value="all">全部</option><option value="pending">待标注</option><option value="done">已标注</option>
+    <option value="lowconf">低置信 &lt;0.6</option><option value="nop">无 P 码</option><option value="review">待复核</option>
+  </select>
+  <select id="fPageSize"><option>24</option><option selected>48</option><option>96</option></select>
+  <button id="prev">« 上一页</button>
+  <input id="jump" type="number" min="1" placeholder="跳页" style="width:64px">
+  <span id="pginfo" class="hint"></span>
+  <button id="next">下一页 »</button>
+  <div class="progwrap"><div class="prog" title="标注进度"><i id="prog"></i></div><span id="progtext" class="hint"></span></div>
+  <button id="exp" class="primary">💾 存档并回传（一键）</button>
+  <button id="expAll">导出全部已标注</button>
+  <label class="imp">导入 CSV<input id="imp" type="file" accept=".csv" style="display:none"></label>
+  <button id="clear" title="清空本浏览器的标注">重置</button>
+  <a class="hint" href="progress.html" target="_blank" style="margin-left:auto">📊 进度汇总页</a>
+</div>
+<div class="bar" style="border-bottom:none;padding-top:0">
+  <span class="hint">同步地址（已内置默认端点，自动回传；如需覆盖可改这里）</span>
+  <input id="syncUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:240px">
+  <span id="syncState" class="hint"></span>
+  <span id="lastSave" class="hint"></span>
+</div>
+<div class="legend">
+  <b>本页标注对象 = 视频内容（Task A）</b>：内容四分类 + 强度 + P/R 码 + 证据。
+  「强度」指视频本身的情绪强度（1-4），「置信」是你对这次四分类判断的把握（0-1）。
+  评论情绪（Task B）<b>不在本页标注</b>——它是自动算的 VAD（1-9 连续分），只读展示在每张卡片底部，仅供对照。
+  <div style="margin-top:4px">分工：4 人各负责约 550 条（按游戏×难度分层确定性分配，互不重叠）；每人用 <code>?a=2</code> 这样的链接进入自己的视图。</div>
+  <details style="margin-top:6px"><summary style="cursor:pointer;color:#58a6ff">四分类判定指引（mixed vs neutral，点开）</summary>
+  <div style="margin-top:6px">
+  <b>① 先问「这条片子的设计意图想让观众产生什么情绪」</b>，不是画面里发生了什么。列出情绪拍点：正向＝高光/夸奖/治愈/燃/期待；负向＝失败/吐槽/压抑/恐怖/遗憾/尴尬。<br>
+  <b>② 只有单一极性有"有分量的拍点"</b>（能指到具体秒数、被设计出来）→ positive / negative。一个情绪拍点都没有（信息型：攻略、机制推演、纯外观展示）→ <b>neutral</b>。<br>
+  <b>③ 两个极性都有有分量的拍点，且形成并置/反转结构</b>（先抑后扬、先扬后抑、反差打脸、自嘲+高燃、社死名场面）→ <b>mixed</b>。<br>
+  <b>mixed 与 neutral 的区别</b>：neutral 是「没有情绪拍点」（信息型平铺）；mixed 是「有两个对立的情绪拍点」（情绪双峰）。所以：<br>
+  · 「搞笑翻车」≠ neutral（有笑点=情绪设计）→ mixed（惨+笑）或 positive（笑点为主）；<br>
+  · 「攻略+燃 BGM」可以是 neutral（信息为主、无情绪拍点），也可以是 positive（燃是设计核心）；<br>
+  · 纯色调/画面冷暖对比 ≠ mixed（视觉对比不是情绪反转）；「情绪很强烈」≠ mixed（强度 4 也可以是 positive）；<br>
+  · 标题吐槽但正片高燃：以正片是否有负向拍点为准，拿不准就选一个 + 置信 0.5-0.6 + 备注写清两段证据。<br>
+  <b>别用 mixed 当"拿不准"的垃圾桶</b>：当前 AI 预标里 mixed 占 43.5%（positive 48.7 / negative 4.2 / neutral 3.2），大概率高估——人工标注时请反向校正。
+  </div></details>
+</div>
+<div id="grid" class="grid"></div>
+<div class="foot"><span class="hint">构建版本 2026-11-28 · 自动回传开启</span><br>
+标注保存位置：本浏览器 localStorage（刷新不丢）。点「导出我的标注 CSV」得到 <code>human_labels_*.csv</code>（含 annotator 列），
+然后运行 <code>python Gameclip-SNA/scripts/merge_labels.py human_labels_*.csv</code> 把结果写回
+<code>data/clips.csv</code> 的 human_correction 列并推送。P/R 码表与 AI 预标来自自动流水线；人工只需确认/修正。
+</div>
+<script>
+const DATA = {"codes": {"p": {"P101": "社死名场面", "P102": "伏地魔", "P103": "决赛圈", "P104": "刚枪对掏", "P105": "回忆杀", "P106": "伏击阴人", "P107": "团灭灭队", "P108": "堵桥", "P109": "舔包搜刮", "P110": "攻楼守楼", "P111": "空投争夺", "P112": "刺激追逃", "P113": "载具追梦", "P114": "变装变身", "P115": "真人整活", "P116": "音乐/舞蹈演绎", "P117": "攻略教学/清单", "P118": "日常 Vlog/生活化", "P119": "开箱/抽卡展示", "P120": "联动/活动预告"}, "r": {"R101": "前3秒进入战斗", "R102": "前3秒高光爆点", "R103": "前3秒真人出镜", "R104": "前3秒大字报", "R105": "开头画面主体", "R106": "口播钩子句式", "R151": "真人出镜开场", "R152": "界面/录屏开场", "R153": "图文/梗图开场", "R154": "攻略/教学直入", "R201": "连续击杀镜头组", "R202": "残血反杀", "R203": "逆风翻盘", "R204": "组队协作画面", "R205": "载具画面", "R206": "PVE/Boss战", "R251": "对掏/刚枪流", "R252": "苟分/潜行流", "R253": "团队协同流", "R254": "载具/机动战", "R301": "新内容演示", "R302": "时装外观特写", "R303": "官方宠物出镜", "R304": "开箱/物资瞬间", "R305": "周边实体出镜", "R306": "载具外观展示", "R307": "官方吉祥物/IP形象出镜", "R308": "特殊物品/道具展示", "R309": "坐骑与特殊载具", "R351": "地图/模式攻略", "R352": "外观/时装展示", "R353": "玩法机制演示", "R354": "武器/枪械内容", "R355": "剧情/世界观演绎", "R401": "失败/搞笑画面", "R402": "线下活动/演出画面", "R403": "真人出镜占比", "R404": "IP形象出镜(网感)", "R405": "聊天体叙事", "R406": "梗图表情包贴片", "R407": "情感文案主线", "R408": "跨设备与屏摄猎奇", "R409": "NPC剧场演绎", "R410": "线下联动实拍", "R451": "社死/搞笑梗", "R452": "逆风翻盘/爽点", "R453": "情感/回忆杀", "R454": "悬念/反差钩子", "R455": "吐槽/锐评", "R501": "福利文案露出", "R502": "福利CTA", "R503": "口令码与共创引导", "R504": "收益可视化钩子", "R601": "纯游戏实录", "R602": "画面特效包装", "R603": "非引擎渲染占比", "R604": "录屏直出", "R605": "快节奏BGM", "R606": "命中音效强化", "R607": "主体观感缺陷", "R651": "第一人称视角", "R652": "多角色剧演", "R653": "前后对比式", "R654": "盘点/清单式", "R655": "问答/教学式", "R701": "胜利/撤离结算", "R702": "新版本承接", "R703": "悬念/互动收尾", "R751": "引导收藏/关注", "R752": "引导搜索/体验", "R753": "福利/码值收尾", "R754": "悬念/下集收尾", "R801": "总时长", "R802": "版式", "R803": "剪辑节奏", "R804": "字幕功能类型", "R805": "画幅填充方式", "R806": "画幅混编构图", "R807": "解说字幕全程", "R808": "画质缺陷", "R809": "色彩光影缺陷", "R810": "分屏呈现", "R811": "简单拼接剪辑", "R812": "字幕缺陷", "R813": "文字遮挡", "R901": "直播贴片与数据条", "R902": "搬运二创痕迹", "R903": "攻略可视化标注", "R904": "定版卡", "R905": "品牌包装元素", "R906": "直播/数据贴片", "R356": "舞蹈/表演动作展示", "R814": "卡点/节奏剪辑", "R310": "抽卡/爆装瞬间", "R907": "步骤/清单标注", "R456": "生活化场景/日常记录"}}, "rows": [{"id": "7674855190961440443", "game": "光遇", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7674855190961440443.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7674855190961440443.jpg", "src": "https://www.douyin.com/video/7674855190961440443", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 5, \"dist\": {\"positive\": 0.0, \"negative\": 0.2, \"neutral\": 0.8}, \"net\": -0.2, \"mean_vad\": {\"v\": 4.775, \"a\": 3.472, \"d\": 4.895}}", "status": "pending", "notes": "", "dur": "41.1", "a": 0}, {"id": "7699460561063049125", "game": "光遇", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7699460561063049125.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7699460561063049125.jpg", "src": "https://www.douyin.com/video/7699460561063049125", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 24, \"dist\": {\"positive\": 0.2917, \"negative\": 0.4167, \"neutral\": 0.2917}, \"net\": -0.125, \"mean_vad\": {\"v\": 4.83, \"a\": 4.518, \"d\": 4.82}}", "status": "pending", "notes": "", "dur": "35.9", "a": 0}, {"id": "7710535753181171578", "game": "光遇", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710535753181171578.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710535753181171578.jpg", "src": "https://www.douyin.com/video/7710535753181171578", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 24, \"dist\": {\"positive\": 0.4583, \"negative\": 0.2083, \"neutral\": 0.3333}, \"net\": 0.25, \"mean_vad\": {\"v\": 5.539, \"a\": 4.849, \"d\": 5.048}}", "status": "pending", "notes": "", "dur": "12.6", "a": 0}, {"id": "7668987888940917093", "game": "原神", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7668987888940917093.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7668987888940917093.jpg", "src": "https://www.douyin.com/video/7668987888940917093", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.48, \"negative\": 0.32, \"neutral\": 0.2}, \"net\": 0.16, \"mean_vad\": {\"v\": 5.039, \"a\": 4.884, \"d\": 4.832}}", "status": "pending", "notes": "", "dur": "18.2", "a": 0}, {"id": "7697236554318080370", "game": "原神", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7697236554318080370.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7697236554318080370.jpg", "src": "https://www.douyin.com/video/7697236554318080370", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 21, \"dist\": {\"positive\": 0.4286, \"negative\": 0.1429, \"neutral\": 0.4286}, \"net\": 0.2857, \"mean_vad\": {\"v\": 5.368, \"a\": 4.379, \"d\": 4.964}}", "status": "pending", "notes": "", "dur": "16.7", "a": 0}, {"id": "7708706315748527402", "game": "原神", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7708706315748527402.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7708706315748527402.jpg", "src": "https://www.douyin.com/video/7708706315748527402", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.2, \"negative\": 0.2, \"neutral\": 0.6}, \"net\": 0.0, \"mean_vad\": {\"v\": 5.209, \"a\": 4.297, \"d\": 4.931}}", "status": "pending", "notes": "", "dur": "49.5", "a": 0}, {"id": "7709302472640385510", "game": "原神", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7709302472640385510.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7709302472640385510.jpg", "src": "https://www.douyin.com/video/7709302472640385510", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.24, \"negative\": 0.44, \"neutral\": 0.32}, \"net\": -0.2, \"mean_vad\": {\"v\": 4.897, \"a\": 4.651, \"d\": 4.643}}", "status": "pending", "notes": "", "dur": "17.8", "a": 0}, {"id": "7709441020836056370", "game": "原神", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7709441020836056370.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7709441020836056370.jpg", "src": "https://www.douyin.com/video/7709441020836056370", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.6, \"negative\": 0.12, \"neutral\": 0.28}, \"net\": 0.48, \"mean_vad\": {\"v\": 5.723, \"a\": 4.859, \"d\": 5.244}}", "status": "pending", "notes": "", "dur": "12.6", "a": 0}, {"id": "7596557632027118900", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7596557632027118900.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7596557632027118900.jpg", "src": "https://www.douyin.com/video/7596557632027118900", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.36, \"negative\": 0.12, \"neutral\": 0.52}, \"net\": 0.24, \"mean_vad\": {\"v\": 5.268, \"a\": 4.084, \"d\": 4.913}}", "status": "pending", "notes": "", "dur": "20.9", "a": 0}, {"id": "7667426878407798902", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7667426878407798902.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7667426878407798902.jpg", "src": "https://www.douyin.com/video/7667426878407798902", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.28, \"negative\": 0.2, \"neutral\": 0.52}, \"net\": 0.08, \"mean_vad\": {\"v\": 5.046, \"a\": 4.407, \"d\": 5.105}}", "status": "pending", "notes": "", "dur": "41.3", "a": 0}, {"id": "7710556807273868770", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710556807273868770.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710556807273868770.jpg", "src": "https://www.douyin.com/video/7710556807273868770", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 22, \"dist\": {\"positive\": 0.3636, \"negative\": 0.1364, \"neutral\": 0.5}, \"net\": 0.2273, \"mean_vad\": {\"v\": 5.188, \"a\": 4.368, \"d\": 4.931}}", "status": "pending", "notes": "", "dur": "30.4", "a": 0}, {"id": "7710591221287509312", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710591221287509312.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710591221287509312.jpg", "src": "https://www.douyin.com/video/7710591221287509312", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 21, \"dist\": {\"positive\": 0.1905, \"negative\": 0.2381, \"neutral\": 0.5714}, \"net\": -0.0476, \"mean_vad\": {\"v\": 4.773, \"a\": 4.454, \"d\": 5.075}}", "status": "pending", "notes": "", "dur": "29.4", "a": 0}, {"id": "7710804052049625585", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710804052049625585.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710804052049625585.jpg", "src": "https://www.douyin.com/video/7710804052049625585", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 16, \"dist\": {\"positive\": 0.375, \"negative\": 0.1875, \"neutral\": 0.4375}, \"net\": 0.1875, \"mean_vad\": {\"v\": 5.27, \"a\": 4.418, \"d\": 4.965}}", "status": "pending", "notes": "", "dur": "10.2", "a": 0}, {"id": "7711289710576004346", "game": "和平精英", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7711289710576004346.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7711289710576004346.jpg", "src": "https://www.douyin.com/video/7711289710576004346", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 22, \"dist\": {\"positive\": 0.2273, \"negative\": 0.3182, \"neutral\": 0.4545}, \"net\": -0.0909, \"mean_vad\": {\"v\": 4.846, \"a\": 4.454, \"d\": 4.805}}", "status": "pending", "notes": "", "dur": "35.2", "a": 0}, {"id": "7711264116614253859", "game": "崩坏星穹铁道", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7711264116614253859.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7711264116614253859.jpg", "src": "https://www.douyin.com/video/7711264116614253859", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.32, \"negative\": 0.24, \"neutral\": 0.44}, \"net\": 0.08, \"mean_vad\": {\"v\": 5.215, \"a\": 4.759, \"d\": 5.067}}", "status": "pending", "notes": "", "dur": "54.5", "a": 0}, {"id": "7711287072409095475", "game": "崩坏星穹铁道", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7711287072409095475.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7711287072409095475.jpg", "src": "https://www.douyin.com/video/7711287072409095475", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.64, \"negative\": 0.04, \"neutral\": 0.32}, \"net\": 0.6, \"mean_vad\": {\"v\": 6.168, \"a\": 4.838, \"d\": 5.498}}", "status": "pending", "notes": "", "dur": "38.3", "a": 0}, {"id": "7638308242510124123", "game": "王者荣耀", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7638308242510124123.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7638308242510124123.jpg", "src": "https://www.douyin.com/video/7638308242510124123", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 22, \"dist\": {\"positive\": 0.2273, \"negative\": 0.0909, \"neutral\": 0.6818}, \"net\": 0.1364, \"mean_vad\": {\"v\": 5.012, \"a\": 4.068, \"d\": 5.002}}", "status": "pending", "notes": "", "dur": "14.3", "a": 0}, {"id": "7657460516084917754", "game": "王者荣耀", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7657460516084917754.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7657460516084917754.jpg", "src": "https://www.douyin.com/video/7657460516084917754", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 5, \"dist\": {\"positive\": 0.8, \"negative\": 0.2, \"neutral\": 0.0}, \"net\": 0.6, \"mean_vad\": {\"v\": 6.493, \"a\": 5.417, \"d\": 5.957}}", "status": "pending", "notes": "", "dur": "47.5", "a": 0}, {"id": "7672235002575397027", "game": "王者荣耀", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7672235002575397027.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7672235002575397027.jpg", "src": "https://www.douyin.com/video/7672235002575397027", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 5, \"dist\": {\"positive\": 0.6, \"negative\": 0.2, \"neutral\": 0.2}, \"net\": 0.4, \"mean_vad\": {\"v\": 5.55, \"a\": 4.229, \"d\": 5.242}}", "status": "pending", "notes": "", "dur": "50.7", "a": 0}, {"id": "7707967913844922102", "game": "王者荣耀", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7707967913844922102.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7707967913844922102.jpg", "src": "https://www.douyin.com/video/7707967913844922102", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 24, \"dist\": {\"positive\": 0.2917, \"negative\": 0.25, \"neutral\": 0.4583}, \"net\": 0.0417, \"mean_vad\": {\"v\": 5.28, \"a\": 4.565, \"d\": 5.063}}", "status": "pending", "notes": "", "dur": "18.3", "a": 0}, {"id": "7668906960570430682", "game": "第五人格", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7668906960570430682.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7668906960570430682.jpg", "src": "https://www.douyin.com/video/7668906960570430682", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 20, \"dist\": {\"positive\": 0.4, \"negative\": 0.25, \"neutral\": 0.35}, \"net\": 0.15, \"mean_vad\": {\"v\": 5.603, \"a\": 4.791, \"d\": 4.978}}", "status": "pending", "notes": "", "dur": "40.4", "a": 0}, {"id": "7708743784348535887", "game": "第五人格", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7708743784348535887.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7708743784348535887.jpg", "src": "https://www.douyin.com/video/7708743784348535887", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 22, \"dist\": {\"positive\": 0.3182, \"negative\": 0.1818, \"neutral\": 0.5}, \"net\": 0.1364, \"mean_vad\": {\"v\": 5.311, \"a\": 4.319, \"d\": 4.979}}", "status": "pending", "notes": "", "dur": "51.6", "a": 0}, {"id": "7710603517959219428", "game": "第五人格", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710603517959219428.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710603517959219428.jpg", "src": "https://www.douyin.com/video/7710603517959219428", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.32, \"negative\": 0.52, \"neutral\": 0.16}, \"net\": -0.2, \"mean_vad\": {\"v\": 4.991, \"a\": 4.996, \"d\": 4.659}}", "status": "pending", "notes": "", "dur": "35.9", "a": 0}, {"id": "7711013727923158889", "game": "第五人格", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7711013727923158889.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7711013727923158889.jpg", "src": "https://www.douyin.com/video/7711013727923158889", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.0, \"negative\": 0.64, \"neutral\": 0.36}, \"net\": -0.64, \"mean_vad\": {\"v\": 4.301, \"a\": 4.581, \"d\": 4.244}}", "status": "pending", "notes": "", "dur": "30.1", "a": 0}, {"id": "7709754081678212799", "game": "蛋仔派对", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7709754081678212799.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7709754081678212799.jpg", "src": "https://www.douyin.com/video/7709754081678212799", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 24, \"dist\": {\"positive\": 0.5, \"negative\": 0.0833, \"neutral\": 0.4167}, \"net\": 0.4167, \"mean_vad\": {\"v\": 5.691, \"a\": 4.595, \"d\": 5.134}}", "status": "pending", "notes": "", "dur": "41.7", "a": 0}, {"id": "7710144437070348217", "game": "蛋仔派对", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710144437070348217.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710144437070348217.jpg", "src": "https://www.douyin.com/video/7710144437070348217", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 15, \"dist\": {\"positive\": 0.0667, \"negative\": 0.2, \"neutral\": 0.7333}, \"net\": -0.1333, \"mean_vad\": {\"v\": 4.812, \"a\": 4.284, \"d\": 4.786}}", "status": "pending", "notes": "", "dur": "38.6", "a": 0}, {"id": "7710157617612982618", "game": "蛋仔派对", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710157617612982618.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710157617612982618.jpg", "src": "https://www.douyin.com/video/7710157617612982618", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.2, \"negative\": 0.48, \"neutral\": 0.32}, \"net\": -0.28, \"mean_vad\": {\"v\": 4.766, \"a\": 4.833, \"d\": 4.664}}", "status": "pending", "notes": "", "dur": "57.0", "a": 0}, {"id": "7710909773281734376", "game": "蛋仔派对", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7710909773281734376.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7710909773281734376.jpg", "src": "https://www.douyin.com/video/7710909773281734376", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 25, \"dist\": {\"positive\": 0.68, \"negative\": 0.28, \"neutral\": 0.04}, \"net\": 0.4, \"mean_vad\": {\"v\": 5.276, \"a\": 5.054, \"d\": 5.055}}", "status": "pending", "notes": "", "dur": "17.8", "a": 0}, {"id": "7703007473745934335", "game": "逆水寒手游", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7703007473745934335.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7703007473745934335.jpg", "src": "https://www.douyin.com/video/7703007473745934335", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 2, \"dist\": {\"positive\": 1.0, \"negative\": 0.0, \"neutral\": 0.0}, \"net\": 1.0, \"mean_vad\": {\"v\": 6.287, \"a\": 5.033, \"d\": 5.18}}", "status": "pending", "notes": "", "dur": "24.9", "a": 0}, {"id": "7706836283389175241", "game": "逆水寒手游", "fmt": "", "prev": "https://banford74.github.io/Gameclip-SNA/media/review/7706836283389175241.mp4", "kf": "https://banford74.github.io/Gameclip-SNA/media/kf/7706836283389175241.jpg", "src": "https://www.douyin.com/video/7706836283389175241", "p": "", "r": "", "conf": "", "stance": "", "vad": "{\"n\": 8, \"dist\": {\"positive\": 0.75, \"negative\": 0.0, \"neutral\": 0.25}, \"net\": 0.75, \"mean_vad\": {\"v\": 6.404, \"a\": 5.187, \"d\": 5.057}}", "status": "pending", "notes": "", "dur": "9.3", "a": 0}], "n": 4, "counts": {"0": 30}, "defaultSync": "https://script.google.com/macros/s/AKfycbzHkV6B6xXSp6S_DyoJFZM3PWOQY2oZVD0uwbyNrOLtfymoc9sZHgsPuyOrCkKzA1qQmA/exec", "banner": "盲标轮（30 条，4 人重叠）：本页不显示 AI 预标，请完全按自己的判断标。4 个人标同一批 30 条，用于算一致性 κ 和干净的 gold；约 15-20 分钟。链接：blind.html?a=1 / ?a=2 / ?a=3 / ?a=4", "blind": true};
+const LS = 'gameclip_labels_v1';
+const ANN_KEY = 'gameclip_annotator';
+const SYNC_KEY = 'gameclip_sync_url';
+const STANCES = ['positive','negative','neutral','mixed'];
+const ST_CN = {positive:'正向', negative:'负向', neutral:'中性', mixed:'混合'};
+let labels = {};
+try { labels = JSON.parse(localStorage.getItem(LS) || '{}'); } catch(e) { labels = {}; }
+let page = 0;
+let SYNC = (new URLSearchParams(location.search).get('sync') || localStorage.getItem(SYNC_KEY) || DATA.defaultSync || '').trim();
+if (new URLSearchParams(location.search).get('sync')) localStorage.setItem(SYNC_KEY, SYNC);
+let syncTimer = null;
+
+function urlAnn(){
+  const m = location.search.match(/[?&]a=(\d+)/);
+  if (m) return parseInt(m[1], 10);
+  const v = parseInt(localStorage.getItem(ANN_KEY) || '0', 10);
+  return (v >= 1 && v <= DATA.n) ? v : 1;
+}
+let ANNOTATOR = urlAnn();
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const splitCodes = s => String(s||'').replace(/、/g,';').split(';').map(x=>x.trim()).filter(Boolean);
+
+function save(){
+  localStorage.setItem(LS, JSON.stringify(labels));
+  renderTop(); scheduleSync();
+  const ls = document.getElementById('lastSave');
+  if (ls) ls.textContent = '上次存档 ' + new Date().toLocaleTimeString();
+}
+function get(id){ return labels[id]; }
+function scope(){ return ANNOTATOR === 'all' ? DATA.rows : DATA.rows.filter(r => r.a === ANNOTATOR || r.a === 0); }
+
+const ROWMAP = new Map(DATA.rows.map(r => [r.id, r]));
+function myLabels(){
+  const out = {};
+  for (const [cid, rec] of Object.entries(labels)) {
+    const a = String(rec.annotator || (ROWMAP.get(cid) || {}).a || '');
+    if (ANNOTATOR === 'all' || a === String(ANNOTATOR)) out[cid] = rec;
+  }
+  return out;
+}
+function scheduleSync(){ if (!SYNC) return; clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 5000); }
+async function saveNow(){
+  save();                                   // 先落本地
+  const st = document.getElementById('syncState');
+  if (SYNC) {
+    clearTimeout(syncTimer);
+    await pushSync();                       // 一键回传
+    if (st) st.textContent += ' ✓ 已回传';
+  } else {
+    exportCSV(false);                       // 未配置同步：直接导出 CSV
+    const d = document.getElementById('drop') || document.getElementById('lastSave');
+    if (st) st.textContent = '未配置同步地址，已导出 CSV（发回给负责人即可）';
+    else if (d) d.textContent = '已导出 CSV，请发给负责人';
+  }
+}
+async function pushSync(){
+  const st = document.getElementById('syncState');
+  if (!SYNC) return;
+  const mine = myLabels();
+  const payload = {annotator: ANNOTATOR === 'all' ? 'all' : ANNOTATOR, saved_at: new Date().toISOString(),
+                   count: Object.keys(mine).length, labels: mine};
+  const body = JSON.stringify(payload);
+  try {
+    // 优先普通 CORS 请求：能读到返回、可确认“真的写进去了”（Apps Script 回 ACAO: *）
+    const r = await fetch(SYNC, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body});
+    let msg = '';
+    try { const j = await r.json(); msg = j && (j.updated !== undefined) ? `（更新 ${j.updated} / 新增 ${j.appended}）` : ''; } catch (e) {}
+    if (st) { st.textContent = '已同步 ' + new Date().toLocaleTimeString() + '（' + Object.keys(mine).length + ' 条）' + msg; st.className = 'hint'; }
+  } catch (e) {
+    try {
+      await fetch(SYNC, {method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain;charset=utf-8'}, body});
+      if (st) { st.textContent = '已发送（无法确认响应）' + new Date().toLocaleTimeString(); st.className = 'hint'; }
+    } catch (e2) {
+      if (st) { st.textContent = '同步失败：' + e2.message; st.className = 'hint bad'; }
+    }
+  }
+}
+
+function renderTop(){
+  const rows = scope();
+  let done = 0; rows.forEach(r => { if (get(r.id)) done++; });
+  $('#prog').style.width = (100*done/Math.max(1,rows.length)).toFixed(1) + '%';
+  let gdone = 0; DATA.rows.forEach(r => { if (get(r.id)) gdone++; });
+  $('#progtext').textContent = `我 ${done}/${rows.length} · 全局 ${gdone}/${DATA.rows.length}`;
+  $('#who').textContent = ANNOTATOR === 'all' ? '（全部标注员视图）' : `（标注员 ${ANNOTATOR}）`;
+  if (DATA.banner) { const b = document.getElementById('banner'); if (b) { b.innerHTML = esc(DATA.banner); b.style.display = 'block'; } }
+  const sel = $('#fAnn'); if (sel.value !== String(ANNOTATOR)) sel.value = String(ANNOTATOR);
+}
+
+function options(){
+  const games = [...new Set(DATA.rows.map(r=>r.game))].sort();
+  $('#fGame').innerHTML = '<option value="all">全部游戏</option>' + games.map(g=>`<option>${esc(g)}</option>`).join('');
+  $('#fAnn').innerHTML = Array.from({length:DATA.n}, (_,i)=>`<option value="${i+1}">标注员 ${i+1}（${DATA.counts[i+1]||0} 条）</option>`).join('') + '<option value="all">全部</option>';
+  $('#fAnn').value = String(ANNOTATOR);
+}
+
+function filtered(){
+  const rows = scope();
+  const g = $('#fGame').value, st = $('#fStatus').value;
+  return rows.filter(r => {
+    if (g !== 'all' && r.game !== g) return false;
+    const lab = get(r.id);
+    if (st === 'pending' && lab) return false;
+    if (st === 'done' && !lab) return false;
+    if (st === 'lowconf' && !(r.conf && parseFloat(r.conf) < 0.6)) return false;
+    if (st === 'nop' && r.p) return false;
+    if (st === 'review' && !(r.status === 'pending' || !r.p)) return false;
+    return true;
+  });
+}
+
+function chips(field, id, selected){
+  const out = [];
+  for (const [code, name] of Object.entries(DATA.codes[field])) {
+    const on = selected.includes(code);
+    out.push(`<label class="${on?'on':''}" title="${esc(name)}"><input type="checkbox" data-f="${field}" data-id="${id}" value="${code}" ${on?'checked':''}><span>${code} ${esc(name.slice(0,6))}</span></label>`);
+  }
+  return out.join('');
+}
+
+function card(r){
+  const lab = get(r.id) || {};
+  const aiP = splitCodes(r.p), aiR = splitCodes(r.r);
+  const pSel = lab.p_codes ? splitCodes(lab.p_codes) : aiP;
+  const rSel = lab.r_codes ? splitCodes(lab.r_codes) : aiR;
+  const stance = lab.stance || '';
+  let vad = null;
+  try { vad = r.vad ? JSON.parse(r.vad) : null; } catch (e) { vad = null; }
+  const d = (vad && vad.dist) || {};
+  const vadLine = (vad && vad.n)
+    ? `<div class="vad">评论观测（自动·Task B，仅供对照，不在此标注）：n=${vad.n} · 正${Math.round((d.positive||0)*100)}% 中${Math.round((d.neutral||0)*100)}% 负${Math.round((d.negative||0)*100)}% · 均值 v=${(vad.mean_vad && vad.mean_vad.v) ?? '—'}（1-9）</div>`
+    : '<div class="vad">评论观测：暂无</div>';
+  const media = r.prev ? `<video controls preload="metadata" src="${esc(r.prev)}"></video>`
+              : r.kf ? `<a href="${esc(r.src||r.kf)}" target="_blank"><img src="${esc(r.kf)}" loading="lazy"></a>`
+              : '<div class="novideo">无预览</div>';
+  const done = !!get(r.id);
+  const st = r.status === 'deprioritized' ? '降级' : (r.status === 'pending_analysis' ? '待分析' : '待复核');
+  return `<div class="card ${done?'done':''}" data-cid="${r.id}">
+    <div class="meta"><span><b>${esc(r.game)}</b> · ${esc(r.fmt||'—')} · <code>${esc(r.id)}</code></span>
+      <span class="badge ${done?'b-done':'b-pend'}">${done?'已标注':'待标注'}</span></div>
+    ${media}
+    <div class="tags">${DATA.blind ? '' : `AI：P <b>${esc(r.p||'—')}</b> · R <b>${esc(r.r||'—')}</b> · 内容 <b>${esc(r.stance||'—')}</b> · conf ${esc(r.conf||'—')} · `}${esc(r.dur||'')}s · ${st}</div>
+    <div class="f">
+      <label>内容四分类（视频内容，必选）</label>
+      <div class="stance" data-f="stance" data-id="${r.id}">
+        ${STANCES.map(s=>`<label class="${stance===s?'sel':''}"><input type="radio" name="st_${r.id}" value="${s}" ${stance===s?'checked':''}>${ST_CN[s]}</label>`).join('')}
+      </div>
+      <div class="row2">
+        <div><label>内容强度 1-4（视频本身情绪强弱，1=平 4=极强）</label><input type="number" min="1" max="4" value="${lab.intensity||''}" data-f="intensity" data-id="${r.id}" placeholder="1-4"></div>
+        <div><label>标注置信 0-1（你对四分类判断的把握）</label><input type="number" min="0" max="1" step="0.05" value="${lab.confidence||''}" data-f="confidence" data-id="${r.id}" placeholder="0.7"></div>
+      </div>
+      <label>P 码（可多选；空=无合适码）</label>
+      <div class="chips">${chips('p', r.id, pSel)}</div>
+      <label>R 码（分号分隔，可留空）</label>
+      <input type="text" data-f="r_codes" data-id="${r.id}" value="${esc(rSel.join(';'))}" placeholder="如 R101;R452">
+      <label>证据（帧/秒数，必填）</label>
+      <textarea rows="1" data-f="evidence" data-id="${r.id}" placeholder="f_04 12s 第一滴血…">${esc(lab.evidence||'')}</textarea>
+      <label>备注（可选）</label>
+      <input type="text" data-f="notes" data-id="${r.id}" value="${esc(lab.notes||'')}" placeholder="存疑点 / 修正原因">
+    </div>
+    ${vadLine}
+    <div class="ai"><a href="${esc(r.src)}" target="_blank">平台原片</a></div>
+  </div>`;
+}
+
+function collect(id){
+  const cardEl = document.querySelector(`[data-cid="${id}"]`);
+  if (!cardEl) return;
+  const rec = get(id) || {};
+  const st = cardEl.querySelector(`input[name="st_${id}"]:checked`);
+  if (st) rec.stance = st.value;
+  cardEl.querySelectorAll('[data-f]').forEach(el => {
+    const f = el.dataset.f; if (f === 'stance') return;
+    if (el.type === 'checkbox' && f === 'p') {
+      const set = new Set(rec.p_codes ? splitCodes(rec.p_codes) : []);
+      if (el.checked) set.add(el.value); else set.delete(el.value);
+      rec.p_codes = [...set].join(';');
+      return;
+    }
+    if (['r_codes','intensity','confidence','evidence','notes'].includes(f)) rec[f] = el.value;
+  });
+  if (!rec.stance) return;
+  rec.annotator = ANNOTATOR === 'all' ? (rec.annotator || '') : ANNOTATOR;
+  rec.annotated_at = new Date().toISOString();
+  labels[id] = rec; save();
+}
+
+function render(){
+  const list = filtered();
+  const ps = parseInt($('#fPageSize').value, 10);
+  const pages = Math.max(1, Math.ceil(list.length / ps));
+  if (page >= pages) page = pages - 1;
+  if (page < 0) page = 0;
+  const slice = list.slice(page*ps, (page+1)*ps);
+  $('#grid').innerHTML = slice.map(card).join('') || '<p class="hint">没有符合条件的条目。</p>';
+  $('#pginfo').textContent = `第 ${page+1}/${pages} 页 · 共 ${list.length} 条`;
+  document.querySelectorAll('.card').forEach(card => {
+    const id = card.dataset.cid;
+    card.querySelectorAll('input,textarea').forEach(el => el.addEventListener('change', () => collect(id)));
+    card.querySelectorAll('.stance label').forEach(l => l.addEventListener('click', () => {
+      card.querySelectorAll('.stance label').forEach(x=>x.classList.remove('sel'));
+      l.classList.add('sel');
+    }));
+  });
+}
+
+function csvEscape(v){ v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+function exportCSV(all){
+  const list = all ? DATA.rows.filter(r => get(r.id)) : scope().filter(r => get(r.id));
+  const head = ['clip_id','annotator','stance','intensity','p_codes','r_codes','evidence','confidence','notes','annotated_at'];
+  const lines = [head.join(',')];
+  list.forEach(r => {
+    const l = get(r.id); if (!l) return;
+    lines.push([r.id, l.annotator ?? r.a ?? '', l.stance||'', l.intensity||'', l.p_codes||'', l.r_codes||'', l.evidence||'', l.confidence||'', l.notes||'', l.annotated_at||''].map(csvEscape).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (all ? 'human_labels_all_' : 'human_labels_a' + ANNOTATOR + '_') + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function parseCSV(text){
+  const rows = []; let cur = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { cur.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') { if (field !== '' || cur.length) { cur.push(field); rows.push(cur); cur = []; field = ''; } }
+    else field += c;
+  }
+  if (field !== '' || cur.length) { cur.push(field); rows.push(cur); }
+  return rows;
+}
+
+function importCSV(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    const rows = parseCSV(fr.result);
+    if (!rows.length) return;
+    const head = rows[0].map(x => x.trim());
+    const idx = n => head.indexOf(n);
+    const fields = ['annotator','stance','intensity','p_codes','r_codes','evidence','confidence','notes','annotated_at'];
+    let n = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i]; const cid = r[idx('clip_id')];
+      if (!cid) continue;
+      const rec = {};
+      for (const k of fields) { const j = idx(k); if (j >= 0) rec[k] = r[j]; }
+      if (rec.stance) { labels[cid.trim()] = rec; n++; }
+    }
+    save(); render();
+    alert('导入 ' + n + ' 条标注');
+  };
+  fr.readAsText(file);
+}
+
+function main(){
+  options();
+  $('#fAnn').addEventListener('change', () => {
+    const v = $('#fAnn').value;
+    ANNOTATOR = v === 'all' ? 'all' : parseInt(v, 10);
+    localStorage.setItem(ANN_KEY, ANNOTATOR === 'all' ? '' : String(ANNOTATOR));
+    page = 0; renderTop(); render();
+  });
+  $('#fGame').addEventListener('change', () => { page = 0; render(); });
+  $('#fStatus').addEventListener('change', () => { page = 0; render(); });
+  $('#fPageSize').addEventListener('change', () => { page = 0; render(); });
+  $('#prev').addEventListener('click', () => { page--; render(); });
+  $('#next').addEventListener('click', () => { page++; render(); });
+  $('#jump').addEventListener('change', e => {
+    const n = parseInt(e.target.value, 10);
+    const ps = parseInt($('#fPageSize').value, 10);
+    const pages = Math.max(1, Math.ceil(filtered().length / ps));
+    if (n >= 1 && n <= pages) { page = n - 1; render(); }
+    e.target.value = '';
+  });
+  $('#exp').addEventListener('click', () => saveNow());
+  $('#expAll').addEventListener('click', () => exportCSV(true));
+  $('#imp').addEventListener('change', e => { if (e.target.files[0]) importCSV(e.target.files[0]); e.target.value = ''; });
+  $('#clear').addEventListener('click', () => { if (confirm('清空本浏览器所有标注？建议先导出。')) { labels = {}; save(); render(); } });
+  $('#syncUrl').value = SYNC;
+  $('#syncUrl').addEventListener('change', () => {
+    SYNC = $('#syncUrl').value.trim();
+    localStorage.setItem(SYNC_KEY, SYNC);
+    if (SYNC) pushSync();
+  });
+  renderTop(); render();
+}
+main();
+</script>
+</body></html>
