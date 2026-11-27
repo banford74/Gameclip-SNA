@@ -7,10 +7,14 @@ const OUT = process.argv[3] || SRC.replace('.json', '_vad.json');
 const TOPN = Number(process.argv[4] || 300);
 const BATCH = 25;
 
+// 密钥从环境变量读取（仓库里不存 key）：DEEPSEEK_API_KEY / ZAI_API_KEY
 const RATERS = [
-  { name: 'deepseek-flash', base: 'https://api.deepseek.com/v1', key: 'sk-66f8727e1630490a8c5dfe7717687ad5', model: 'deepseek-flash' },
-  { name: 'glm-5.3-flashx', base: 'https://open.bigmodel.cn/api/paas/v4', key: 'b1d52ed86ed1480394362c4d6599d70e.91dmvUdkptrnX2xv', model: 'glm-5.3-flashx' },
+  { name: 'deepseek-flash', base: 'https://api.deepseek.com/v1', key: process.env.DEEPSEEK_API_KEY || '', model: 'deepseek-flash' },
+  { name: 'glm-5.3-flashx', base: 'https://open.bigmodel.cn/api/paas/v4', key: process.env.ZAI_API_KEY || '', model: 'glm-5.3-flashx' },
 ];
+for (const r of RATERS) {
+  if (!r.key) { console.error(`[缺密钥] ${r.name} 需要环境变量：见脚本顶部注释`); process.exit(1); }
+}
 
 const SYS = `你是中文短视频评论情感评分员。对每条评论按 1-9 分打三个维度：
 - valence（情感正负）：1=极负面 3=负面 5=中性 7=正面 9=极正面
