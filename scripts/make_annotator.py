@@ -225,7 +225,7 @@ function myLabels(){
   }
   return out;
 }
-function scheduleSync(){ if (!SYNC) return; clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 1200); }
+function scheduleSync(){ if (!SYNC) return; clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 5000); }
 async function saveNow(){
   save();                                   // 先落本地
   const st = document.getElementById('syncState');

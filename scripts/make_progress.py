@@ -197,9 +197,9 @@ async function loadUrl(url){
     const text = await r.text();
     labels = new Map();                 // URL 模式以远端为准
     const n = ingestText(text, url);
-    document.getElementById('drop').textContent = `已从 URL 载入 ${n} 条，每 20 秒自动刷新`;
+    document.getElementById('drop').textContent = `已从 URL 载入 ${n} 条，每 60 秒自动刷新`;
     if (timer) clearInterval(timer);
-    timer = setInterval(() => loadUrl(url), 20000);
+    timer = setInterval(() => loadUrl(url), 60000);
   } catch (e) {
     document.getElementById('drop').textContent = '拉取失败：' + e.message;
   }
