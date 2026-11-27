@@ -176,7 +176,7 @@ a{color:var(--acc)}
   </div></details>
 </div>
 <div id="grid" class="grid"></div>
-<div class="foot">
+<div class="foot"><span class="hint">构建版本 2026-11-28 · 自动回传开启</span><br>
 标注保存位置：本浏览器 localStorage（刷新不丢）。点「导出我的标注 CSV」得到 <code>human_labels_*.csv</code>（含 annotator 列），
 然后运行 <code>python Gameclip-SNA/scripts/merge_labels.py human_labels_*.csv</code> 把结果写回
 <code>data/clips.csv</code> 的 human_correction 列并推送。P/R 码表与 AI 预标来自自动流水线；人工只需确认/修正。
