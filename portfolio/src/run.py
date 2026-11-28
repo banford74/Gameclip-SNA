@@ -7,7 +7,8 @@ Usage:
 
 Guardrails:
   * writes are restricted to the --out directory (and that directory must stay under CWD),
-  * per-item wall-clock timeout (default 300s) so one bad item cannot wedge the run,
+  * per-attempt network timeout (--timeout, default 120s) so a stalled response cannot wedge the
+    run: a healthy item is one call, a pathological one is at most REPAIRS+1 calls,
   * bounded workers (max 8), failures are logged and skipped -- never abort the whole run.
 """
 from __future__ import annotations
@@ -17,7 +18,7 @@ import csv
 import json
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -52,7 +53,7 @@ def one(item: dict, mock: bool, timeout_s: int) -> dict:
     log: list = []
     t0 = time.time()
     try:
-        rec = extract(item, mock=mock, log=log)
+        rec = extract(item, mock=mock, log=log, timeout_s=timeout_s)
         cs = rec["content_sentiment"]
         row = {"clip_id": item.get("video_id"), "status": "ok", "stance": cs["label"],
                "intensity": cs["intensity"], "stance_evidence": cs["evidence"],
@@ -93,15 +94,13 @@ def main() -> None:
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=workers) as ex:
         futs = {ex.submit(one, it, args.mock, args.timeout): it for it in items}
-        done, not_done = wait(futs, timeout=None)
-        for f in done:
+        for done_n, f in enumerate(as_completed(futs), 1):
             res = f.result()
             rows.append(res["row"])
             logs.append(res["log"])
-        for f in not_done:
-            it = futs[f]
-            rows.append({"clip_id": it.get("video_id"), "status": "timeout", "attempts": 0})
-            logs.append({"clip_id": it.get("video_id"), "attempts": []})
+            r = res["row"]
+            print(f"  [{done_n}/{len(futs)}] {r.get('clip_id')} {r.get('status')} "
+                  f"{r.get('stance', '')} {r.get('ms', '')}ms", flush=True)
 
     rows.sort(key=lambda r: str(r.get("clip_id")))
     with open(args.out / "rows.csv", "w", newline="", encoding="utf-8-sig") as fh:

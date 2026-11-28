@@ -4,6 +4,7 @@
   - OpenAI:        base_url=https://api.openai.com/v1,  model=gpt-4o
   - 通义千问 VL:   base_url=https://dashscope.aliyuncs.com/compatible-mode/v1, model=qwen-vl-max
   - 智谱 GLM-4V:   base_url=https://open.bigmodel.cn/api/paas/v4, model=glm-4v
+  - OpenCode:     base_url=https://opencode.ai/inference/openai/v1, model=deepseek-v4.1-flash
   - DeepSeek:     base_url=https://api.deepseek.com/v1, model=deepseek-vl / 自定义视觉模型
   - 腾讯云 MaaS:   base_url=https://tokenhub.tencentmaas.com/v1, model=deepseek/deepseek-v4-flash-vision-exp
       该网关同时支持 /chat/completions 与 /responses 两种接口；reasoning 型视觉模型
@@ -70,6 +71,7 @@ class VLMClient:
         # 各 provider 默认 base_url，未显式配置时按 provider 回落
         _DEFAULT_BASE = {
             "openai": "https://api.openai.com/v1",
+            "opencode": "https://opencode.ai/inference/openai/v1",
             "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1",
             "glm": "https://open.bigmodel.cn/api/paas/v4",
             "deepseek": "https://api.deepseek.com/v1",
@@ -80,7 +82,7 @@ class VLMClient:
             provider=provider,
             base_url=cfg.get("base_url") or _DEFAULT_BASE.get(provider, "https://api.openai.com/v1"),
             api_key=cfg.get("api_key", "") or os.environ.get("VLM_API_KEY", "")
-                    or os.environ.get("DEEPSEEK_API_KEY", ""),
+                    or os.environ.get("OPENCODE_API_KEY", ""),
             model=cfg.get("model", "gpt-4o"),
             max_tokens=cfg.get("max_tokens", 1500),
             temperature=cfg.get("temperature", 0.2),

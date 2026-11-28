@@ -41,8 +41,8 @@ scripts/                    make_player.py（Pages 播放页）、dl_mobile.js
 
 ```bash
 pip install -r requirements.txt
-export ZAI_API_KEY=...        # 逐帧视觉（glm-5.3-flashx）
-export DEEPSEEK_API_KEY=...   # P/R 打标通道（deepseek-flash）
+export OPENCODE_API_KEY=...   # OpenCode Models 的 key；逐帧视觉 + P/R 打标都走这个端点
+                              # 默认模型 deepseek-v4.1-flash（可用 OPENCODE_BASE_URL / OPENCODE_MODEL 覆盖）
 
 python -m src.ua_agent.run --video x.mp4 --game 和平精英 --format 实机录屏
 python -m src.ua_agent.run --url "https://www.douyin.com/video/7709870849365478116"

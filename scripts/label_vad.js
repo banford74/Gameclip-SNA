@@ -7,14 +7,13 @@ const OUT = process.argv[3] || SRC.replace('.json', '_vad.json');
 const TOPN = Number(process.argv[4] || 300);
 const BATCH = 25;
 
-// 密钥从环境变量读取（仓库里不存 key）：DEEPSEEK_API_KEY / ZAI_API_KEY
+// 密钥从环境变量读取（仓库里不存 key）：OPENCODE_API_KEY
+// 端点统一走 OpenCode Models，默认模型 deepseek-v4.1-flash
+const { endpoint, chatJSON } = require('./llm_endpoints');
 const RATERS = [
-  { name: 'deepseek-flash', base: 'https://api.deepseek.com/v1', key: process.env.DEEPSEEK_API_KEY || '', model: 'deepseek-flash' },
-  { name: 'glm-5.3-flashx', base: 'https://open.bigmodel.cn/api/paas/v4', key: process.env.ZAI_API_KEY || '', model: 'glm-5.3-flashx' },
+  endpoint('deepseek-v4.1-flash'),
+  endpoint('kimi-k3.1-pro'),
 ];
-for (const r of RATERS) {
-  if (!r.key) { console.error(`[缺密钥] ${r.name} 需要环境变量：见脚本顶部注释`); process.exit(1); }
-}
 
 const SYS = `你是中文短视频评论情感评分员。对每条评论按 1-9 分打三个维度：
 - valence（情感正负）：1=极负面 3=负面 5=中性 7=正面 9=极正面
@@ -25,13 +24,10 @@ const SYS = `你是中文短视频评论情感评分员。对每条评论按 1-9
 
 async function call(r, texts) {
   const user = texts.map((t, i) => `${i}. ${t.replace(/\n/g, ' ')}`).join('\n');
-  const resp = await fetch(r.base + '/chat/completions', {
-    method: 'POST', headers: { Authorization: 'Bearer ' + r.key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: r.model, messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }], max_tokens: 5000, temperature: 0 }),
-    signal: AbortSignal.timeout(180000),
+  const j = await chatJSON(r, {
+    messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
+    max_tokens: 5000, temperature: 0,
   });
-  if (!resp.ok) throw new Error(`http ${resp.status}: ${(await resp.text()).slice(0, 120)}`);
-  const j = await resp.json();
   const m = ((j.choices[0].message || {}).content || '').match(/\[[\s\S]*\]/);
   if (!m) throw new Error('no json');
   const arr = JSON.parse(m[0]);

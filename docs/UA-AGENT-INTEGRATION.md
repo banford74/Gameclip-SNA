@@ -42,7 +42,7 @@ G1 抽帧(cv2) → G2 关键帧筛选(模糊/去重/场景) → G3 VLM 逐帧理
 → G6 report.md + annotation.json（训练标注样本）
 ```
 - 四级→三级按 `L4_TO_L3` 链式校正；七级→九级按 provenance；宽高→十级。
-- VLM 走智谱 `glm-5.3-flashx`（config.yaml，`${ZAI_API_KEY}`），也支持 cuhksz/deepseek OpenAI 兼容端点；无 key 自动 MockVLM 离线跑通。
+- VLM 走 OpenCode Models `deepseek-v4.1-flash`（config.yaml，`${OPENCODE_API_KEY}`，兼容 OpenAI `/chat/completions`）；无 key 自动 MockVLM 离线跑通。
 
 ### 5. CLI（`pipeline/ua_agent/run.py`）
 ```powershell

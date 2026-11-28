@@ -1,5 +1,6 @@
 # UA-ClipInsight agent 配置（VLM 网关、抽帧、关键帧、评论、报告）
-# 密钥走环境变量展开：${ZAI_API_KEY} / ${DEEPSEEK_API_KEY} / ${CUHKSZ_API_KEY}
+# 端点统一走 OpenCode Models（OpenAI 兼容）；密钥走环境变量 ${OPENCODE_API_KEY}
+# 可选覆盖：OPENCODE_BASE_URL / OPENCODE_MODEL
 
 # 标签模式：P/R 双层主体系（15 P + 91 R）；情感 VAD 见 pipeline/sentiment/
 # sentiment.mode: hybrid = 词典 × LLM 蒸馏覆盖层 × 线性校准（推荐）；lexicon = 纯词典
@@ -7,20 +8,20 @@ sentiment:
   mode: hybrid
 
 vlm:
-  provider: zai
-  base_url: https://open.bigmodel.cn/api/paas/v4
-  api_key: ${ZAI_API_KEY}
-  model: glm-5.3-flashx
+  provider: opencode
+  base_url: https://opencode.ai/inference/openai/v1
+  api_key: ${OPENCODE_API_KEY}
+  model: deepseek-v4.1-flash
   max_tokens: 8000
   temperature: 0.2
   timeout: 240
 
-# P/R 打标专用通道（flashx 的 reasoning 波动会吃掉预算；deepseek-flash 稳定且 JSON 可靠）
+# P/R 打标专用通道（同一端点，主模型 deepseek-v4.1-flash；JSON 可靠性见 PR-LABEL-SYSTEM）
 vlm_tagger:
-  provider: deepseek
-  base_url: https://api.deepseek.com/v1
-  api_key: ${DEEPSEEK_API_KEY}
-  model: deepseek-flash
+  provider: opencode
+  base_url: https://opencode.ai/inference/openai/v1
+  api_key: ${OPENCODE_API_KEY}
+  model: deepseek-v4.1-flash
   max_tokens: 16000
   temperature: 0.2
   timeout: 300

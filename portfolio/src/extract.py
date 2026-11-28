@@ -18,13 +18,22 @@ import base64
 import json
 import os
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
-import requests
+try:  # requests is convenient but optional — the repo must run on a bare stdlib Python too
+    import requests
+except ImportError:  # pragma: no cover
+    requests = None
 
-API_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1/chat/completions")
-API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-MODEL = os.environ.get("EXTRACT_MODEL", "deepseek-flash")
+OPENCODE_BASE = os.environ.get("OPENCODE_BASE_URL", "https://opencode.ai/inference/openai/v1").rstrip("/")
+API_URL = OPENCODE_BASE + "/chat/completions"
+API_KEY = os.environ.get("OPENCODE_API_KEY", "")
+MODEL = os.environ.get("OPENCODE_MODEL", "deepseek-v4.1-flash")
+# 端点前面有 Cloudflare：显式带浏览器 UA，避免指纹规则变动时整批 403
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
 
 REPAIRS = 2                      # repair rounds after the first attempt
 MAX_FRAMES = 20                  # hard cap on frames per request
@@ -93,19 +102,34 @@ def _frame_parts(item: dict) -> list[dict]:
     return parts
 
 
+def _post_json(url: str, headers: dict, payload: dict, timeout_s: int) -> tuple[int, str]:
+    """POST JSON, return (status, body_text). Uses requests when installed, else urllib."""
+    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    if requests is not None:
+        r = requests.post(url, headers=headers, data=raw, timeout=(15, timeout_s))
+        return r.status_code, r.text
+    req = urllib.request.Request(url, data=raw, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as r:
+            return r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8", "replace")
+
+
 def call_model(prompt: str, item: dict, timeout_s: int = 300) -> tuple[str, dict]:
     """One HTTP call in JSON mode. Returns (raw_text, usage)."""
     content = [{"type": "text", "text": prompt}] + _frame_parts(item)
     body = {"model": MODEL, "messages": [{"role": "user", "content": content}],
             "response_format": {"type": "json_object"},
             "max_tokens": 4000, "temperature": 0.3, "stream": False}
-    r = requests.post(API_URL, headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
-                      json=body, timeout=(15, timeout_s))
-    if r.status_code != 200:
-        raise RuntimeError(f"http {r.status_code}: {r.text[:200]}")
-    j = r.json()
-    text = ((j["choices"][0].get("message") or {}).get("content") or "").strip()
-    return text, (j.get("usage") or {})
+    status, text = _post_json(API_URL, {"Authorization": f"Bearer {API_KEY}",
+                                       "Content-Type": "application/json",
+                                       "User-Agent": UA}, body, timeout_s)
+    if status != 200:
+        raise RuntimeError(f"http {status}: {text[:200]}")
+    j = json.loads(text)
+    out = ((j["choices"][0].get("message") or {}).get("content") or "").strip()
+    return out, (j.get("usage") or {})
 
 
 def validate(rec: dict) -> list[str]:
@@ -179,7 +203,7 @@ class MockBackend:
 
 
 def extract(item: dict, mock: bool = False, mock_backend: MockBackend | None = None,
-            log: list | None = None) -> dict:
+            log: list | None = None, timeout_s: int = 300) -> dict:
     """Extract one item. Returns record; raises ItemError / RuntimeError on failure.
 
     log: optional list collecting attempt dicts {"attempt","ms","tokens","errors"}.
@@ -194,11 +218,11 @@ def extract(item: dict, mock: bool = False, mock_backend: MockBackend | None = N
                 text, usage = (mock_backend or MockBackend())(item, attempt)
             else:
                 if not API_KEY:
-                    raise RuntimeError("DEEPSEEK_API_KEY is not set")
+                    raise RuntimeError("OPENCODE_API_KEY is not set")
                 full = prompt if attempt == 0 else (
                     prompt + f"\n\n你上一次的输出是：\n{last_text}\n\n它有以下问题：{'；'.join(last_errors)}。"
                              "请只输出修正后的完整 JSON 对象。")
-                text, usage = call_model(full, item)
+                text, usage = call_model(full, item, timeout_s=timeout_s)
             rec = json.loads(text)
             errs = validate(rec)
             if log is not None:

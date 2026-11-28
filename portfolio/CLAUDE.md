@@ -67,8 +67,8 @@ Confidence: 0–1, model-stated; do not clamp or invent it.
 
 ## 5. Model & request conventions
 
-- Model: `deepseek-flash`; endpoint `https://api.deepseek.com/v1/chat/completions` (override with
-  `DEEPSEEK_BASE_URL` / `EXTRACT_MODEL`); key comes from `DEEPSEEK_API_KEY` **env**, never a file.
+- Model: `deepseek-v4.1-flash` on OpenCode Models (`https://opencode.ai/inference/openai/v1/chat/completions`;
+  override with `OPENCODE_BASE_URL` / `OPENCODE_MODEL`); key comes from `OPENCODE_API_KEY` **env**, never a file.
 - **JSON mode is mandatory**: `response_format={"type":"json_object"}`; prompt-only JSON is not allowed.
 - temperature 0.3 · max_tokens 4000 · ≤20 frames per request (512 px, ~1 frame / 2 s).
 - Validation failures → repair round (re-ask with the error list), max 2; log every attempt with
@@ -78,7 +78,7 @@ Confidence: 0–1, model-stated; do not clamp or invent it.
 
 ```bash
 python src/run.py data/samples -o out/ --mock     # offline smoke test (<1 s)
-python src/run.py data/samples -o out/            # live (needs DEEPSEEK_API_KEY)
+python src/run.py data/samples -o out/            # live (needs OPENCODE_API_KEY)
 python src/robustness.py                          # must print "validation failures: 0"
 python eval/run_eval.py eval/gold.csv out/rows.csv
 ```
