@@ -1,6 +1,7 @@
 # UA-ClipInsight agent 配置（VLM 网关、抽帧、关键帧、评论、报告）
-# 端点统一走 OpenCode Models（OpenAI 兼容）；密钥走环境变量 ${OPENCODE_API_KEY}
-# 可选覆盖：OPENCODE_BASE_URL / OPENCODE_MODEL
+# 端点统一走 OpenCode Go（OpenAI 兼容）；密钥走环境变量 ${OPENCODE_API_KEY}
+# 可选覆盖：OPENCODE_BASE_URL / OPENCODE_MODEL / OPENCODE_SESSION
+# Go 端点要求 x-opencode-session 路由头，客户端会自动带上（见 vlm_client.py）
 
 # 标签模式：P/R 双层主体系（15 P + 91 R）；情感 VAD 见 pipeline/sentiment/
 # sentiment.mode: hybrid = 词典 × LLM 蒸馏覆盖层 × 线性校准（推荐）；lexicon = 纯词典
@@ -9,7 +10,7 @@ sentiment:
 
 vlm:
   provider: opencode
-  base_url: https://opencode.ai/inference/openai/v1
+  base_url: https://opencode.ai/inference/go/openai/v1
   api_key: ${OPENCODE_API_KEY}
   model: deepseek-v4.1-flash
   max_tokens: 8000
@@ -19,7 +20,7 @@ vlm:
 # P/R 打标专用通道（同一端点，主模型 deepseek-v4.1-flash；JSON 可靠性见 PR-LABEL-SYSTEM）
 vlm_tagger:
   provider: opencode
-  base_url: https://opencode.ai/inference/openai/v1
+  base_url: https://opencode.ai/inference/go/openai/v1
   api_key: ${OPENCODE_API_KEY}
   model: deepseek-v4.1-flash
   max_tokens: 16000

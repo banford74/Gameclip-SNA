@@ -41,8 +41,10 @@ scripts/                    make_player.py（Pages 播放页）、dl_mobile.js
 
 ```bash
 pip install -r requirements.txt
-export OPENCODE_API_KEY=...   # OpenCode Models 的 key；逐帧视觉 + P/R 打标都走这个端点
+export OPENCODE_API_KEY=...   # OpenCode Go 订阅的 key；逐帧视觉 + P/R 打标都走这个端点
                               # 默认模型 deepseek-v4.1-flash（可用 OPENCODE_BASE_URL / OPENCODE_MODEL 覆盖）
+                              # 注意：Go 端点是 https://opencode.ai/inference/go/openai/v1，
+                              # 请求必须带 x-opencode-session 头（脚本已自动带上）
 
 python -m src.ua_agent.run --video x.mp4 --game 和平精英 --format 实机录屏
 python -m src.ua_agent.run --url "https://www.douyin.com/video/7709870849365478116"

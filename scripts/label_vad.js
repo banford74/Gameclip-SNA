@@ -8,7 +8,7 @@ const TOPN = Number(process.argv[4] || 300);
 const BATCH = 25;
 
 // 密钥从环境变量读取（仓库里不存 key）：OPENCODE_API_KEY
-// 端点统一走 OpenCode Models，默认模型 deepseek-v4.1-flash
+// 端点统一走 OpenCode Go，默认模型 deepseek-v4.1-flash（x-opencode-session 由 llm_endpoints 自动带）
 const { endpoint, chatJSON } = require('./llm_endpoints');
 const RATERS = [
   endpoint('deepseek-v4.1-flash'),

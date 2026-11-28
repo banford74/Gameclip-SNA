@@ -7,7 +7,7 @@ const OUT = process.argv[3] || SRC.replace('.json', '_labeled.json');
 const BATCH = 25;
 
 // 密钥从环境变量读取（仓库里不存 key）：OPENCODE_API_KEY
-// 端点统一走 OpenCode Models，三个 rater = 同一端点的三个模型
+// 端点统一走 OpenCode Go，三个 rater = 同一端点的三个模型
 const { endpoint, chatJSON } = require('./llm_endpoints');
 const RATERS = [
   endpoint('deepseek-v4.1-flash'),

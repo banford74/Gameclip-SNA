@@ -4,7 +4,7 @@
   - OpenAI:        base_url=https://api.openai.com/v1,  model=gpt-4o
   - 通义千问 VL:   base_url=https://dashscope.aliyuncs.com/compatible-mode/v1, model=qwen-vl-max
   - 智谱 GLM-4V:   base_url=https://open.bigmodel.cn/api/paas/v4, model=glm-4v
-  - OpenCode:     base_url=https://opencode.ai/inference/openai/v1, model=deepseek-v4.1-flash
+  - OpenCode Go:  base_url=https://opencode.ai/inference/go/openai/v1, model=deepseek-v4.1-flash
   - DeepSeek:     base_url=https://api.deepseek.com/v1, model=deepseek-vl / 自定义视觉模型
   - 腾讯云 MaaS:   base_url=https://tokenhub.tencentmaas.com/v1, model=deepseek/deepseek-v4-flash-vision-exp
       该网关同时支持 /chat/completions 与 /responses 两种接口；reasoning 型视觉模型
@@ -17,6 +17,7 @@ import base64
 import json
 import os
 import time
+import uuid
 from typing import List, Optional
 
 import requests
@@ -53,6 +54,7 @@ class VLMClient:
         temperature: float = 0.2,
         timeout: int = 60,
         api_style: str = "chat",
+        headers: Optional[dict] = None,
     ):
         self.provider = provider
         self.base_url = base_url.rstrip("/")
@@ -62,6 +64,17 @@ class VLMClient:
         self.temperature = temperature
         self.timeout = timeout
         self.api_style = api_style  # "chat" | "responses"
+        # Go 端点要求 x-opencode-session 路由头（缺失即 400 MissingSessionID）；
+        # 取值只需唯一，这里每客户端一个。
+        default_headers = {}
+        if provider == "opencode":
+            default_headers["x-opencode-session"] = os.environ.get("OPENCODE_SESSION") or f"dsh-ua-{uuid.uuid4().hex}"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            **default_headers,
+            **(headers or {}),
+        }
         self.mock = not api_key
         if self.mock:
             self._mock = MockVLM()
@@ -71,7 +84,7 @@ class VLMClient:
         # 各 provider 默认 base_url，未显式配置时按 provider 回落
         _DEFAULT_BASE = {
             "openai": "https://api.openai.com/v1",
-            "opencode": "https://opencode.ai/inference/openai/v1",
+            "opencode": "https://opencode.ai/inference/go/openai/v1",
             "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1",
             "glm": "https://open.bigmodel.cn/api/paas/v4",
             "deepseek": "https://api.deepseek.com/v1",
@@ -88,6 +101,7 @@ class VLMClient:
             temperature=cfg.get("temperature", 0.2),
             timeout=cfg.get("timeout", 60),
             api_style=api_style,
+            headers=cfg.get("headers"),
         )
 
     @staticmethod
@@ -133,8 +147,7 @@ class VLMClient:
             try:
                 resp = requests.post(
                     f"{self.base_url}/chat/completions",
-                    headers={"Authorization": f"Bearer {self.api_key}",
-                             "Content-Type": "application/json"},
+                    headers=self.headers,
                     json=payload, timeout=self.timeout,
                 )
                 resp.raise_for_status()
@@ -170,8 +183,7 @@ class VLMClient:
             try:
                 resp = requests.post(
                     f"{self.base_url}/responses",
-                    headers={"Authorization": f"Bearer {self.api_key}",
-                             "Content-Type": "application/json"},
+                    headers=self.headers,
                     json=payload, timeout=self.timeout,
                 )
                 resp.raise_for_status()

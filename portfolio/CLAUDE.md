@@ -67,8 +67,10 @@ Confidence: 0–1, model-stated; do not clamp or invent it.
 
 ## 5. Model & request conventions
 
-- Model: `deepseek-v4.1-flash` on OpenCode Models (`https://opencode.ai/inference/openai/v1/chat/completions`;
+- Model: `deepseek-v4.1-flash` on OpenCode Go (`https://opencode.ai/inference/go/openai/v1/chat/completions`;
   override with `OPENCODE_BASE_URL` / `OPENCODE_MODEL`); key comes from `OPENCODE_API_KEY` **env**, never a file.
+  The Go endpoint requires an `x-opencode-session` header — `src/extract.py` sends one per process
+  (`OPENCODE_SESSION` overrides); omitting it returns `400 MissingSessionID`.
 - **JSON mode is mandatory**: `response_format={"type":"json_object"}`; prompt-only JSON is not allowed.
 - temperature 0.3 · max_tokens 4000 · ≤20 frames per request (512 px, ~1 frame / 2 s).
 - Validation failures → repair round (re-ask with the error list), max 2; log every attempt with

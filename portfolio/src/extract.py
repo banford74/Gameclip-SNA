@@ -20,6 +20,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 try:  # requests is convenient but optional — the repo must run on a bare stdlib Python too
@@ -27,10 +28,15 @@ try:  # requests is convenient but optional — the repo must run on a bare stdl
 except ImportError:  # pragma: no cover
     requests = None
 
-OPENCODE_BASE = os.environ.get("OPENCODE_BASE_URL", "https://opencode.ai/inference/openai/v1").rstrip("/")
+# Go 订阅端点。OpenCode Go 与按量付费的 Models 是两条线：同一个 key 打到
+# /inference/openai/v1 会报 402 余额不足，打到 Go 端点才从订阅额度扣。
+OPENCODE_BASE = os.environ.get("OPENCODE_BASE_URL", "https://opencode.ai/inference/go/openai/v1").rstrip("/")
 API_URL = OPENCODE_BASE + "/chat/completions"
 API_KEY = os.environ.get("OPENCODE_API_KEY", "")
 MODEL = os.environ.get("OPENCODE_MODEL", "deepseek-v4.1-flash")
+# Go 端点要求 x-opencode-session 路由头，缺失即 400 MissingSessionID；
+# 取值只需唯一（不是密钥），这里每进程一个。
+SESSION = os.environ.get("OPENCODE_SESSION") or "dsh-eval-" + uuid.uuid4().hex
 # 端点前面有 Cloudflare：显式带浏览器 UA，避免指纹规则变动时整批 403
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
@@ -124,6 +130,7 @@ def call_model(prompt: str, item: dict, timeout_s: int = 300) -> tuple[str, dict
             "max_tokens": 4000, "temperature": 0.3, "stream": False}
     status, text = _post_json(API_URL, {"Authorization": f"Bearer {API_KEY}",
                                        "Content-Type": "application/json",
+                                       "x-opencode-session": SESSION,
                                        "User-Agent": UA}, body, timeout_s)
     if status != 200:
         raise RuntimeError(f"http {status}: {text[:200]}")

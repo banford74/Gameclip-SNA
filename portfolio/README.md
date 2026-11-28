@@ -17,7 +17,7 @@ a robustness harness, and an eval scorer waiting for its gold set.
 
 ```bash
 pip install -r requirements.txt
-export OPENCODE_API_KEY=...            # OpenCode Models key; any OpenAI-compatible endpoint also works via OPENCODE_BASE_URL
+export OPENCODE_API_KEY=...            # OpenCode Go key (base https://opencode.ai/inference/go/openai/v1); override with OPENCODE_BASE_URL
 python src/run.py data/samples -o out/            # live: one API call per item, JSON mode
 python src/run.py data/samples -o out/ --mock     # offline demo, deterministic, no API cost
 python src/robustness.py                          # 10 messy/adversarial inputs, offline
@@ -61,7 +61,7 @@ wall-clock; 5 workers sustain ~6.2 items/min.
 
 ## Reproducibility
 
-Model: `deepseek-v4.1-flash` via OpenCode Models (`https://opencode.ai/inference/openai/v1`, JSON mode) · temperature 0.3 · max_tokens 4000 · prompt in
+Model: `deepseek-v4.1-flash` via OpenCode Go (`https://opencode.ai/inference/go/openai/v1`, JSON mode; `x-opencode-session` header attached automatically) · temperature 0.3 · max_tokens 4000 · prompt in
 `src/extract.py:build_prompt()` · codebook `src/codebook.json` (20 P / 96 R) · runs logged per attempt
 with tokens and ms. Gold-set scoring: `eval/run_eval.py` (stance accuracy, per-class P/R/F1,
 confusion matrix, P/R micro-F1).
