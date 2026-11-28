@@ -38,24 +38,26 @@ async function call(r, texts) {
 
 (async () => {
   const raw = JSON.parse(fs.readFileSync(SRC, 'utf8'));
-  const list = (raw.comments || []).slice(0, TOPN);
+  const list = (raw.comments || []).map(c => (typeof c === 'string' ? { text: c } : c)).slice(0, TOPN);
   console.log('comments:', list.length);
-  const scores = { deepseek: [], glm: [] };
+  const scores = Object.fromEntries(RATERS.map(r => [r.name, []]));
   for (let s = 0; s < list.length; s += BATCH) {
     const batch = list.slice(s, s + BATCH);
     await Promise.all(RATERS.map(async r => {
       const out = await call(r, batch.map(c => c.text)).catch(e => { console.log(`[${r.name}] ${s} fail`, e.message); return batch.map(() => ({ v: 5, a: 5, d: 5 })); });
-      (r.name === 'deepseek-flash' ? scores.deepseek : scores.glm).push(...out);
+      scores[r.name].push(...out);
     }));
     process.stdout.write(`\r${Math.min(s + BATCH, list.length)}/${list.length}`);
   }
   console.log();
+  const names = RATERS.map(r => r.name);
   const rows = list.map((c, i) => {
-    const a = scores.deepseek[i], b = scores.glm[i];
+    const per = names.map(n => scores[n][i]);
+    const avg = k => per.reduce((acc, o) => acc + o[k], 0) / per.length;
     return {
       text: c.text, digg: c.digg,
-      vad: { v: (a.v + b.v) / 2, a: (a.a + b.a) / 2, d: (a.d + b.d) / 2 },
-      by_rater: { deepseek: a, glm: b },
+      vad: { v: avg('v'), a: avg('a'), d: avg('d') },
+      by_rater: Object.fromEntries(names.map((n, j) => [n, per[j]])),
     };
   });
   fs.writeFileSync(OUT, JSON.stringify({ source: SRC, top_n: rows.length, rows, labeled_at: new Date().toISOString() }, null, 2), 'utf8');
