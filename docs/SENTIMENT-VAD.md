@@ -45,7 +45,7 @@
 
 **emoji 已纳入识别**（`src/sentiment/emoji.py`）：Unicode emoji（😂🤣😍😭😡👍👎🔥💀…）与抖音方括号表情（[笑哭]/[捂脸]/[色]/[怒]/[666]…），各带 VAD + 标签 + 情感细分，作为强信号按权重 2.5 计入；方括号表情会先从正文剥离，避免与文字重复计分。
 
-**连续 VAD 标注**（高赞 Top300，deepseek-flash + glm-5.3-flashx 双 rater，1–9 分）与词典对照：
+**连续 VAD 标注**（高赞 Top300，deepseek-v4.1-flash + kimi-k3.1-pro 双 rater 走 OpenCode Go，1–9 分）与词典对照：
 
 | 维度 | Spearman | LLM 均值 | 词典均值 |
 |---|---|---|---|

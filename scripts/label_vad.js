@@ -1,5 +1,5 @@
 // 连续 VAD 标注（1-9）+ 与词典相关性评估
-// 用法: node _probe/label_vad.js <comments_all.json> [out.json] [topN=300]
+// 用法: node scripts/label_vad.js <comments_all.json> [out.json] [topN=300]
 const fs = require('fs');
 
 const SRC = process.argv[2];

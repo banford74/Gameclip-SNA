@@ -41,7 +41,7 @@
 
 - **游戏**：和平精英 20%、原神 15%、三角洲 15%、王者 15%、蛋仔 10%、光遇 10%、其他 15%
 - **形态**：实机 25%、短剧 15%、攻略 15%、音乐舞蹈 10%、混剪 10%、真人 10%、图文 8%、其他 7%
-- **结果分层**（评论 valence）：正 40 / 负 30 / 中 20 / 混合 10
+- **结果分层**（评论 valence，三分类，无 mixed）：正 45 / 负 35 / 中 20
 - **约束**：单游戏 ≤25%、单形态 ≤30%、每 P 码 ≥30 条、每 R 组 ≥50 条
 
 ### 2. 切分与 OOD
@@ -83,7 +83,7 @@
 | 项 | 状态 |
 |---|---|
 | P/R 码表（15+91） | ✅ `pr_codebook.py` |
-| P/R 打标器（A+B 投票 + 置信） | ✅ `pr_tagger.py`，deepseek-flash 通道稳定，v3 实测 high |
+| P/R 打标器（A+B 投票 + 置信） | ✅ `pr_tagger.py`，deepseek-v4.1-flash（OpenCode Go）通道稳定，v3 实测 high |
 | 十级辅助标签 | ✅ 保留（`ua10` 字段，bootstrap 词表） |
 | 平衡方案 | ✅ `configs/balance_plan.json` + `balance.py` 检查器 |
 | 云端登记 | ✅ `cloud.py`（dry-run 可用；等 GitHub token 做真实上传） |

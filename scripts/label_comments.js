@@ -1,5 +1,5 @@
-// 三 rater 评论情感标注（deepseek-flash / glm-5.3-flashx / qwen3.8-27b），输出 majority + κ
-// 用法: node _probe/label_comments3.js skilltest/comments/v3_net_7709870849365478116.json [out.json]
+// 三 rater 评论情感标注（deepseek-v4.1-flash / kimi-k3.1-pro / glm-5.3-flash，全是 OpenCode Go 模型），输出 majority + κ
+// 用法: node scripts/label_comments.js <comments.json> [out.json]
 const fs = require('fs');
 
 const SRC = process.argv[2];
